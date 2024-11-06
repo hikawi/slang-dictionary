@@ -15,11 +15,15 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 
+/**
+ * The main frame of the program.
+ */
 public class MainFrame extends JFrame {
 
     private final DictionaryTableModel model;
 
     public MainFrame() {
+        super("Slang Dictionary");
         this.model = new DictionaryTableModel();
 
         final var mainPane = new JPanel();
@@ -35,6 +39,9 @@ public class MainFrame extends JFrame {
         addButtons();
     }
 
+    /**
+     * Add a search box with a search listener, along with a rigid area for spacing.
+     */
     private void addSearchBox() {
         final var searchBox = new JPanel();
         final var layout = new BoxLayout(searchBox, BoxLayout.X_AXIS);
@@ -43,24 +50,31 @@ public class MainFrame extends JFrame {
         final var label = new JLabel("Search: ");
         final var input = new JTextField();
         input.setPreferredSize(new Dimension(400, 20));
+        input.getDocument().addDocumentListener(new InputSearchListener(model, input));
 
         searchBox.add(label);
         searchBox.add(Box.createRigidArea(new Dimension(32, 0)));
         searchBox.add(input);
 
         this.getContentPane().add(searchBox);
-        this.getContentPane().add(Box.createHorizontalGlue());
+        this.getContentPane().add(Box.createRigidArea(new Dimension(1, 32)));
     }
 
+    /**
+     * Add a view to list out slang words.
+     */
     private void addListView() {
         final var viewBox = new JTable(model);
         final var scrollPane = new JScrollPane(viewBox);
         scrollPane.setPreferredSize(new Dimension(1200, 400));
 
-        this.getContentPane().add(Box.createHorizontalGlue());
+        this.getContentPane().add(Box.createRigidArea(new Dimension(1, 32)));
         this.getContentPane().add(scrollPane);
     }
 
+    /**
+     * Add control buttons to the frame.
+     */
     private void addButtons() {
         final var layout = new FlowLayout(FlowLayout.CENTER, 24, 24);
         final var buttonsMenu = new JPanel(layout);
@@ -68,22 +82,24 @@ public class MainFrame extends JFrame {
         final var setDefaults = new JButton("Reset Defaults");
         setDefaults.addActionListener(e -> {
             model.loadDefaults();
-            JOptionPane.showMessageDialog(this.getContentPane(), "Successfully reset to defaults.", "",
-                    JOptionPane.INFORMATION_MESSAGE);
+            showMessage("All words have been reset to defaults.");
         });
 
         final var save = new JButton("Save");
         save.addActionListener(e -> {
             model.save();
-            JOptionPane.showMessageDialog(this.getContentPane(), "Successfully saved to data file.", "",
-                    JOptionPane.INFORMATION_MESSAGE);
+            showMessage("Attempted to save all to ./data.bin");
         });
 
         buttonsMenu.add(setDefaults);
         buttonsMenu.add(save);
 
-        this.getContentPane().add(Box.createHorizontalGlue());
+        this.getContentPane().add(Box.createRigidArea(new Dimension(1, 32)));
         this.getContentPane().add(buttonsMenu);
+    }
+
+    private void showMessage(final String message) {
+        JOptionPane.showMessageDialog(this.getContentPane(), message, "", JOptionPane.INFORMATION_MESSAGE);
     }
 
 }

@@ -6,12 +6,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Scanner;
 
 import javax.swing.table.AbstractTableModel;
@@ -23,10 +21,14 @@ public class DictionaryTableModel extends AbstractTableModel {
     private final Map<String, String> dictionary;
     private final List<String> words;
 
+    private final List<String> displayedWords;
+    private String filter = "";
+
     public DictionaryTableModel() {
         this.dataFile = new File("./data.bin");
         this.dictionary = new HashMap<>();
         this.words = new ArrayList<>();
+        this.displayedWords = new ArrayList<>();
 
         try {
             if (!this.dataFile.exists())
@@ -35,6 +37,9 @@ public class DictionaryTableModel extends AbstractTableModel {
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+        this.setFilter("");
+        this.updateView();
     }
 
     /**
@@ -66,6 +71,15 @@ public class DictionaryTableModel extends AbstractTableModel {
     }
 
     /**
+     * Sets the filter and sets the viewbox to only show what is being viewed.
+     * 
+     * @param filter
+     */
+    public void setFilter(String filter) {
+        this.filter = filter;
+    }
+
+    /**
      * Remove a word from the index list and its corresponding definition.
      * 
      * @param word The word.
@@ -78,6 +92,18 @@ public class DictionaryTableModel extends AbstractTableModel {
     public void clear() {
         this.words.clear();
         this.dictionary.clear();
+    }
+
+    public void updateView() {
+        this.displayedWords.clear();
+        this.displayedWords.addAll(this.words.parallelStream()
+                .map(word -> Map.entry(word, this.get(word)))
+                .filter(entry -> entry.getValue() != null)
+                .filter(entry -> entry.getKey().toLowerCase().contains(filter.toLowerCase())
+                        || entry.getValue().toLowerCase().contains(filter.toLowerCase()))
+                .map(entry -> entry.getKey())
+                .toList());
+        this.fireTableDataChanged();
     }
 
     /**
@@ -100,7 +126,7 @@ public class DictionaryTableModel extends AbstractTableModel {
             e.printStackTrace();
         }
 
-        this.fireTableDataChanged();
+        this.updateView();
     }
 
     /**
@@ -114,8 +140,9 @@ public class DictionaryTableModel extends AbstractTableModel {
 
             while (scanner.hasNext()) {
                 final var line = scanner.nextLine();
-                System.out.println(line);
                 final var array = line.split("`");
+
+                System.out.printf("Read line \"%s\", putting \"%s\" to \"%s\"\n", line, array[0], array[1]);
                 putWord(array[0], array[1]);
             }
             scanner.close();
@@ -123,22 +150,7 @@ public class DictionaryTableModel extends AbstractTableModel {
             e.printStackTrace();
         }
 
-        this.fireTableDataChanged();
-    }
-
-    /**
-     * Searches through the dictionary with a provided input.
-     * 
-     * @param input The input to search with.
-     * @return A collection of entries involving the search.
-     */
-    public Collection<Entry<String, String>> search(final String input) {
-        return this.words.parallelStream()
-                .map(word -> Map.entry(word, this.get(word)))
-                .filter(entry -> entry.getValue() != null)
-                .filter(entry -> entry.getKey().contains(input.toLowerCase())
-                        || entry.getValue().contains(input.toLowerCase()))
-                .toList();
+        this.updateView();
     }
 
     /**
@@ -164,7 +176,7 @@ public class DictionaryTableModel extends AbstractTableModel {
 
     @Override
     public int getRowCount() {
-        return this.words.size();
+        return this.displayedWords.size();
     }
 
     @Override
@@ -174,8 +186,9 @@ public class DictionaryTableModel extends AbstractTableModel {
 
     @Override
     public Object getValueAt(int rowIndex, int columnIndex) {
-        final var word = this.words.get(rowIndex);
-        return Map.entry(word, this.get(word));
+        if (columnIndex == 0)
+            return this.displayedWords.get(rowIndex);
+        return this.get(this.displayedWords.get(rowIndex));
     }
 
     @Override
