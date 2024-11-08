@@ -7,6 +7,7 @@ import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -18,18 +19,20 @@ import javax.swing.JTextField;
 /**
  * The main frame of the program.
  */
-public class MainFrame extends JFrame {
+public class ApplicationFrame extends JFrame {
 
     private final DictionaryTableModel model;
     private final JTable table;
 
+    private final JCheckBox autoSaveCheckbox;
     private final JButton deleteButton;
 
-    public MainFrame() {
+    public ApplicationFrame() {
         super("Slang Dictionary");
         this.model = new DictionaryTableModel();
         this.table = new JTable(this.model);
         this.deleteButton = new JButton("Delete Entries");
+        this.autoSaveCheckbox = new JCheckBox("Autosave on close");
 
         final var mainPane = new JPanel();
         final var layout = new BoxLayout(mainPane, BoxLayout.Y_AXIS);
@@ -40,6 +43,7 @@ public class MainFrame extends JFrame {
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         addSearchBox();
+        addAutoSaveCheckBox();
         addListView();
         addButtons();
     }
@@ -62,7 +66,17 @@ public class MainFrame extends JFrame {
         searchBox.add(input);
 
         this.getContentPane().add(searchBox);
-        this.getContentPane().add(Box.createRigidArea(new Dimension(1, 32)));
+        this.getContentPane().add(Box.createRigidArea(new Dimension(1, 16)));
+    }
+
+    private void addAutoSaveCheckBox() {
+        final var pane = new JPanel();
+        final var layout = new FlowLayout(FlowLayout.LEFT);
+        pane.setLayout(layout);
+        pane.add(autoSaveCheckbox);
+        autoSaveCheckbox.setSelected(true);
+
+        this.getContentPane().add(pane);
     }
 
     /**
@@ -76,7 +90,7 @@ public class MainFrame extends JFrame {
         table.getColumnModel().getColumn(1).setMinWidth(300);
         table.getSelectionModel().addListSelectionListener(new DisablingButtonModelListener(table, deleteButton));
 
-        this.getContentPane().add(Box.createRigidArea(new Dimension(1, 32)));
+        this.getContentPane().add(Box.createRigidArea(new Dimension(1, 16)));
         this.getContentPane().add(scrollPane);
     }
 
@@ -108,7 +122,7 @@ public class MainFrame extends JFrame {
         buttonsMenu.add(save);
         buttonsMenu.add(deleteButton);
 
-        this.getContentPane().add(Box.createRigidArea(new Dimension(1, 32)));
+        this.getContentPane().add(Box.createRigidArea(new Dimension(1, 16)));
         this.getContentPane().add(buttonsMenu);
     }
 

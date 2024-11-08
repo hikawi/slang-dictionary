@@ -35,13 +35,13 @@ java {
 }
 
 application {
-    mainClass.set("dev.frilly.slangdict.MainClass")
+    mainClass.set("dev.frilly.slangdict.Application")
 }
 
 tasks.jar {
     manifest {
         attributes["Manifest-Version"] = "1.0"
-        attributes["Main-Class"] = "dev.frilly.slangdict.MainClass"
+        attributes["Main-Class"] = "dev.frilly.slangdict.Application"
     }
 }
 
