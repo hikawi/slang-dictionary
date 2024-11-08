@@ -9,7 +9,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
-import dev.frilly.slangdict.Application;
+import dev.frilly.slangdict.I18n;
 
 /**
  * The search box for the slang dictionary.
@@ -26,7 +26,7 @@ public class SearchBox extends JComponent implements Translatable {
         this.frame = frame;
 
         this.searchBoxPanel = new JPanel();
-        this.label = new JLabel(Application.getInstance().getI18n().tl("search"));
+        this.label = new JLabel(I18n.tl("search"));
         this.input = new JTextField();
 
         final var layout = new BoxLayout(this.searchBoxPanel, BoxLayout.X_AXIS);
@@ -38,7 +38,7 @@ public class SearchBox extends JComponent implements Translatable {
         this.searchBoxPanel.add(Box.createRigidArea(new Dimension(32, 0)));
         this.searchBoxPanel.add(input);
 
-        Application.getInstance().getI18n().register(this);
+        I18n.register(this);
     }
 
     public void add() {
@@ -49,7 +49,7 @@ public class SearchBox extends JComponent implements Translatable {
 
     @Override
     public void updateTranslations() {
-        this.label.setText(Application.getInstance().getI18n().tl("search"));
+        this.label.setText(I18n.tl("search"));
     }
 
 }

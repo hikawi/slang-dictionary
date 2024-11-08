@@ -11,11 +11,9 @@ public class Application {
 
     private static Application INSTANCE;
 
-    private final I18n i18n;
     private final ApplicationFrame frame;
 
     private Application() {
-        this.i18n = new I18n();
         this.frame = new ApplicationFrame();
     }
 
@@ -26,25 +24,15 @@ public class Application {
     }
 
     public static void main(String[] args) {
-        System.out.println("Main");
         FlatMacDarkLaf.setup();
-        System.out.println("FlatDarkLaf setup");
 
         final var app = Application.getInstance();
-        System.out.println("App instance");
         app.start();
-        System.out.println("App start");
     }
 
     /**
-     * Retrieves the I18n instance of the application.
-     * 
-     * @return The i18n instance.
+     * Start the application.
      */
-    public I18n getI18n() {
-        return i18n;
-    }
-
     public void start() {
         this.frame.setup();
         this.frame.pack();
