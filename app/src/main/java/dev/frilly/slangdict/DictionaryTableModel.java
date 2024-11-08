@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
+import javax.swing.JOptionPane;
 import javax.swing.table.AbstractTableModel;
 
 public class DictionaryTableModel extends AbstractTableModel {
@@ -126,6 +127,7 @@ public class DictionaryTableModel extends AbstractTableModel {
             e.printStackTrace();
         }
 
+        this.sort();
         this.updateView();
     }
 
@@ -141,8 +143,6 @@ public class DictionaryTableModel extends AbstractTableModel {
             while (scanner.hasNext()) {
                 final var line = scanner.nextLine();
                 final var array = line.split("`");
-
-                System.out.printf("Read line \"%s\", putting \"%s\" to \"%s\"\n", line, array[0], array[1]);
                 putWord(array[0], array[1]);
             }
             scanner.close();
@@ -198,7 +198,7 @@ public class DictionaryTableModel extends AbstractTableModel {
 
     @Override
     public String getColumnName(int column) {
-        final var columns = new String[] { "Word", "Definition" };
+        final var columns = new String[] { "Slang", "Definition" };
         return columns[column];
     }
 
@@ -209,6 +209,26 @@ public class DictionaryTableModel extends AbstractTableModel {
 
     @Override
     public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
+        if (columnIndex == 0) {
+            // Editing a key.
+            final var key = this.displayedWords.get(rowIndex);
+            if (this.get(aValue.toString()) != null) {
+                JOptionPane.showMessageDialog(null, "That key already exists.", "Error!", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            final var value = this.get(key);
+            this.removeWord(key);
+            this.putWord(aValue.toString(), value);
+            this.fireTableDataChanged();
+            this.updateView();
+        } else {
+            // Editing a value.
+            final var key = this.displayedWords.get(rowIndex);
+            this.putWord(key, aValue.toString());
+            this.fireTableDataChanged();
+            this.updateView();
+        }
     }
 
 }

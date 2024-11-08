@@ -21,10 +21,15 @@ import javax.swing.JTextField;
 public class MainFrame extends JFrame {
 
     private final DictionaryTableModel model;
+    private final JTable table;
+
+    private final JButton deleteButton;
 
     public MainFrame() {
         super("Slang Dictionary");
         this.model = new DictionaryTableModel();
+        this.table = new JTable(this.model);
+        this.deleteButton = new JButton("Delete Entries");
 
         final var mainPane = new JPanel();
         final var layout = new BoxLayout(mainPane, BoxLayout.Y_AXIS);
@@ -64,9 +69,12 @@ public class MainFrame extends JFrame {
      * Add a view to list out slang words.
      */
     private void addListView() {
-        final var viewBox = new JTable(model);
-        final var scrollPane = new JScrollPane(viewBox);
+        final var scrollPane = new JScrollPane(table);
+
         scrollPane.setPreferredSize(new Dimension(1200, 400));
+        table.getColumnModel().getColumn(0).setPreferredWidth(300);
+        table.getColumnModel().getColumn(1).setMinWidth(300);
+        table.getSelectionModel().addListSelectionListener(new DisablingButtonModelListener(table, deleteButton));
 
         this.getContentPane().add(Box.createRigidArea(new Dimension(1, 32)));
         this.getContentPane().add(scrollPane);
@@ -91,8 +99,14 @@ public class MainFrame extends JFrame {
             showMessage("Attempted to save all to ./data.bin");
         });
 
+        deleteButton.addActionListener(e -> {
+            System.out.println(table.getSelectedRowCount());
+        });
+        deleteButton.setEnabled(false);
+
         buttonsMenu.add(setDefaults);
         buttonsMenu.add(save);
+        buttonsMenu.add(deleteButton);
 
         this.getContentPane().add(Box.createRigidArea(new Dimension(1, 32)));
         this.getContentPane().add(buttonsMenu);
