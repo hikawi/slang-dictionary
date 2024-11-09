@@ -14,8 +14,7 @@ public final class I18n {
 
     private static final List<Translatable> translatables = new ArrayList<>();
 
-    private static Locale locale = Locale.ENGLISH;
-    private static ResourceBundle bundle = ResourceBundle.getBundle("i18n", locale);
+    private static ResourceBundle bundle = ResourceBundle.getBundle("i18n", Configuration.getLocale());
 
     /**
      * Sets the locale and loads the corresponding language pack.
@@ -23,8 +22,8 @@ public final class I18n {
      * @param locale The locale.
      */
     public static void setLocale(final Locale locale) {
-        I18n.locale = locale;
-        I18n.bundle = ResourceBundle.getBundle("i18n", locale);
+        Configuration.setLocale(locale);
+        I18n.bundle = ResourceBundle.getBundle("i18n", Configuration.getLocale());
         updateTranslations();
     }
 

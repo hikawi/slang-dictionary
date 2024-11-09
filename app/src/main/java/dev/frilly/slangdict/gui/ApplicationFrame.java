@@ -9,6 +9,8 @@ import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
+import dev.frilly.slangdict.listener.FrameCloseListener;
+
 /**
  * The main frame of the program.
  */
@@ -29,14 +31,28 @@ public class ApplicationFrame extends JFrame {
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     }
 
+    /**
+     * Sets up the frame and adds components.
+     */
     public void setup() {
         final var translateButtons = new TranslateButtons();
         this.componentMap.put("translate-buttons", translateButtons);
         translateButtons.add(this);
 
-        final var searchBox = new SearchBox(this);
+        final var searchBox = new SearchBox();
         this.componentMap.put("search-box", searchBox);
-        searchBox.add();
+        searchBox.add(this);
+
+        final var autosavePane = new AutosavePane();
+        this.componentMap.put("autosave", autosavePane);
+        autosavePane.add(this);
+    }
+
+    /**
+     * Sets up a saving data for the window close event.
+     */
+    public void setupCloseListener() {
+        this.addWindowListener(new FrameCloseListener());
     }
 
     /**

@@ -1,16 +1,17 @@
-package dev.frilly.slangdict;
+package dev.frilly.slangdict.listener;
 
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 
-import javax.swing.JCheckBox;
+import dev.frilly.slangdict.Application;
 
+/**
+ * A simple listener to call {@link Application#saveData} when the frame is
+ * closed.
+ */
 public class FrameCloseListener implements WindowListener {
 
-    private final JCheckBox autosave;
-
-    public FrameCloseListener(final JCheckBox autosave) {
-        this.autosave = autosave;
+    public FrameCloseListener() {
     }
 
     @Override
@@ -19,7 +20,8 @@ public class FrameCloseListener implements WindowListener {
 
     @Override
     public void windowClosing(WindowEvent e) {
-
+        System.out.println("Closing...");
+        Application.getInstance().saveData();
     }
 
     @Override
