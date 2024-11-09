@@ -31,7 +31,6 @@ public class AutosavePane extends JComponent implements Translatable {
         final var pane = new JPanel(layout);
 
         checkBox.addActionListener(e -> {
-            System.out.println(checkBox.isSelected());
             Configuration.setAutosave(checkBox.isSelected());
         });
         pane.add(checkBox);

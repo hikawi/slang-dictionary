@@ -12,7 +12,9 @@ import java.util.Locale;
 
 import com.formdev.flatlaf.themes.FlatMacDarkLaf;
 
+import dev.frilly.slangdict.dat.DictionaryModel;
 import dev.frilly.slangdict.gui.ApplicationFrame;
+import dev.frilly.slangdict.gui.DictionaryView;
 
 /**
  * The singleton class that holds the application together.
@@ -52,6 +54,15 @@ public class Application {
     }
 
     /**
+     * Retrieves the inner dictionary model.
+     * 
+     * @return The model.
+     */
+    public DictionaryModel getDictionaryModel() {
+        return frame.<DictionaryView>getComponent("dictionary-view").getModel();
+    }
+
+    /**
      * Start the application.
      */
     public void start() {
@@ -82,6 +93,33 @@ public class Application {
     }
 
     /**
+     * Loads the saved dictionary.
+     * 
+     * @param file The file
+     * @throws Exception
+     */
+    public void loadDictionaryData(final File file) throws Exception {
+        if (!file.exists())
+            return;
+
+        final var input = new DataInputStream(new BufferedInputStream(new FileInputStream(file)));
+        Configuration.clearWords();
+        Configuration.clearFavorites();
+
+        while (input.available() > 0) {
+            final var key = input.readUTF();
+            final var definition = input.readUTF();
+            final var favorite = input.readBoolean();
+            Configuration.putWord(key, definition);
+            if (favorite)
+                Configuration.addFavorite(key);
+        }
+        Configuration.sortWords();
+
+        input.close();
+    }
+
+    /**
      * Saves the data from Configuration.
      * 
      * @param file the file
@@ -100,6 +138,27 @@ public class Application {
     }
 
     /**
+     * Saves the dictionary data down to a file.
+     * 
+     * @param file The file to save to.
+     * @throws Exception
+     */
+    public void saveDictionaryData(final File file) throws Exception {
+        if (!file.exists())
+            file.createNewFile();
+
+        final var output = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(file)));
+        for (final var entry : Configuration.getWordsEntries()) {
+            output.writeUTF(entry.getKey());
+            output.writeUTF(entry.getValue());
+            output.writeBoolean(Configuration.isFavorite(entry.getKey()));
+        }
+
+        output.flush();
+        output.close();
+    }
+
+    /**
      * Loads the application data.
      */
     public void loadData() {
@@ -110,6 +169,9 @@ public class Application {
 
             final var configFile = new File(dataFolder, "config.bin");
             loadConfigData(configFile);
+
+            final var dataFile = new File(dataFolder, "dictionary.bin");
+            loadDictionaryData(dataFile);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -126,9 +188,9 @@ public class Application {
 
             final var configFile = new File(dataFolder, "config.bin");
             saveConfigData(configFile);
-        } catch (SecurityException e) {
-            e.printStackTrace();
-            System.err.println("The app was not given enough permissions to save data.");
+
+            final var dataFile = new File(dataFolder, "dictionary.bin");
+            saveDictionaryData(dataFile);
         } catch (Exception e) {
             e.printStackTrace();
         }

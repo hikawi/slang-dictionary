@@ -29,6 +29,7 @@ public class TranslateFrame extends JDialog {
         super(parent, I18n.tl("pick-a-language"));
         this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         this.setup();
+        this.setLocationRelativeTo(null);
     }
 
     private void setup() {

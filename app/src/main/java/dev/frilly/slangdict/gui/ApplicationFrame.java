@@ -46,6 +46,14 @@ public class ApplicationFrame extends JFrame {
         final var autosavePane = new AutosavePane();
         this.componentMap.put("autosave", autosavePane);
         autosavePane.add(this);
+
+        final var dictionaryView = new DictionaryView();
+        this.componentMap.put("dictionary-view", dictionaryView);
+        dictionaryView.add(this);
+
+        final var controlButtons = new ControlButtonsPane();
+        this.componentMap.put("control-buttons", controlButtons);
+        controlButtons.add(this);
     }
 
     /**
