@@ -2,9 +2,11 @@ package dev.frilly.slangdict.gui.tl;
 
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.event.WindowEvent;
 import java.util.Arrays;
 import java.util.Locale;
 
+import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
@@ -17,6 +19,7 @@ import javax.swing.JScrollPane;
 import javax.swing.ListSelectionModel;
 
 import dev.frilly.slangdict.I18n;
+import dev.frilly.slangdict.listener.MainFrameReEnableListener;
 
 /**
  * A frame to list out options to pick a language.
@@ -24,18 +27,21 @@ import dev.frilly.slangdict.I18n;
 public class TranslateFrame extends JDialog {
 
     private final Locale[] locales = new Locale[] { Locale.ENGLISH, Locale.JAPANESE, Locale.of("vi") };
+    private final JFrame parent;
 
     public TranslateFrame(final JFrame parent) {
         super(parent, I18n.tl("pick-a-language"));
+        this.parent = parent;
         this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         this.setup();
-        this.setLocationRelativeTo(null);
+        this.addWindowListener(new MainFrameReEnableListener());
     }
 
     private void setup() {
         final var pane = new JPanel();
         final var layout = new BoxLayout(pane, BoxLayout.Y_AXIS);
         pane.setLayout(layout);
+        pane.setBorder(BorderFactory.createEmptyBorder(16, 16, 16, 16));
         this.setContentPane(pane);
 
         final var label = new JLabel(I18n.tl("pick-a-language"));
@@ -51,7 +57,7 @@ public class TranslateFrame extends JDialog {
         scrollPane.setPreferredSize(new Dimension(400, 400));
 
         this.getContentPane().add(Box.createVerticalStrut(16));
-        this.getContentPane().add(label);
+        this.getContentPane().add(labelPane);
         this.getContentPane().add(Box.createVerticalStrut(16));
         this.getContentPane().add(scrollPane);
         this.getContentPane().add(Box.createVerticalStrut(16));
@@ -64,7 +70,7 @@ public class TranslateFrame extends JDialog {
 
         final var cancelButton = new JButton(I18n.tl("cancel"));
         cancelButton.addActionListener(e -> {
-            dispose();
+            dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING));
         });
 
         final var confirmButton = new JButton(I18n.tl("confirm"));
@@ -74,7 +80,7 @@ public class TranslateFrame extends JDialog {
                 return;
             final var selectedVal = list.getSelectedIndex();
             I18n.setLocale(locales[selectedVal]);
-            dispose();
+            dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING));
         });
 
         list.addListSelectionListener(e -> {
@@ -89,6 +95,7 @@ public class TranslateFrame extends JDialog {
 
     public void start() {
         this.pack();
+        this.setLocationRelativeTo(parent);
         this.setVisible(true);
     }
 

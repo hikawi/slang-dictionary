@@ -15,6 +15,7 @@ import java.util.Set;
  */
 public final class Configuration {
 
+    // Saved items.
     private static Locale locale = Locale.ENGLISH;
     private static boolean autosave = true;
     private static boolean showOnlyFavorites = false;
@@ -22,6 +23,9 @@ public final class Configuration {
     private static Set<String> favoriteWords = new HashSet<>();
     private static List<String> words = new ArrayList<>(); // For natural ordering of words.
     private static Map<String, String> dictionary = new HashMap<>(); // maps word -> definition.
+
+    // Unsaved items
+    private static String[] selectedWords = new String[] {};
 
     private Configuration() {
     }
@@ -58,6 +62,12 @@ public final class Configuration {
         return dictionary.containsKey(word.toLowerCase()); // For O(1) lookup.
     }
 
+    public static void removeWord(final String word) {
+        dictionary.remove(word.toLowerCase());
+        words.remove(word);
+        favoriteWords.remove(word.toLowerCase());
+    }
+
     public static void removeAt(final int idx) {
         final var key = words.remove(idx);
         dictionary.remove(key);
@@ -66,6 +76,11 @@ public final class Configuration {
     public static void putWord(final String key, final String definition) {
         words.add(key);
         dictionary.put(key.toLowerCase(), definition);
+    }
+
+    public static void setDefinition(final String key, final String def) {
+        if (hasWord(key))
+            dictionary.put(key.toLowerCase(), def);
     }
 
     public static String getDefinition(final String key) {
@@ -94,6 +109,14 @@ public final class Configuration {
 
     public static boolean isFavorite(final String word) {
         return favoriteWords.contains(word.toLowerCase());
+    }
+
+    public static void setSelectedWords(String[] selectedWords) {
+        Configuration.selectedWords = selectedWords;
+    }
+
+    public static String[] getSelectedWords() {
+        return selectedWords;
     }
 
 }

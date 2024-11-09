@@ -7,6 +7,7 @@ import java.util.Scanner;
 import javax.swing.table.AbstractTableModel;
 
 import dev.frilly.slangdict.Configuration;
+import dev.frilly.slangdict.Dialogs;
 import dev.frilly.slangdict.I18n;
 import dev.frilly.slangdict.gui.Translatable;
 
@@ -131,12 +132,37 @@ public class DictionaryModel extends AbstractTableModel implements Translatable 
         columns[0] = I18n.tl("word");
         columns[1] = I18n.tl("definition");
         columns[2] = I18n.tl("favorite");
+        this.fireTableStructureChanged();
     }
 
     @Override
     public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
         final var word = this.displayedWords.get(rowIndex);
         switch (columnIndex) {
+            case 0: // Changing a word.
+                if (Configuration.hasWord((String) aValue)) {
+                    Dialogs.error(I18n.tl("word-exists"));
+                } else if (((String) aValue).isBlank()) {
+                    Dialogs.error(I18n.tl("word-cant-be-empty"));
+                } else {
+                    final var def = Configuration.getDefinition(word);
+                    final var favorite = Configuration.isFavorite(word);
+                    Configuration.removeWord(word);
+                    Configuration.putWord((String) aValue, def);
+                    if (favorite)
+                        Configuration.addFavorite(word);
+
+                    this.updateView();
+                }
+                break;
+            case 1: // Changing the definition.
+                if (((String) aValue).isBlank()) {
+                    Dialogs.error(I18n.tl("definition-cant-be-empty"));
+                } else {
+                    Configuration.setDefinition(word, (String) aValue);
+                    this.updateView();
+                }
+                break;
             case 2: // Favoriting
                 if ((Boolean) aValue)
                     Configuration.addFavorite(word);
