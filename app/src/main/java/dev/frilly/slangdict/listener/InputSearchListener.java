@@ -1,8 +1,10 @@
-package dev.frilly.slangdict;
+package dev.frilly.slangdict.listener;
 
 import javax.swing.JTextField;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+
+import dev.frilly.slangdict.Application;
 
 /**
  * A listener to apply the search input to the dictionary model,
@@ -10,17 +12,15 @@ import javax.swing.event.DocumentListener;
  */
 public class InputSearchListener implements DocumentListener {
 
-    private final DictionaryTableModel model;
     private final JTextField field;
 
-    public InputSearchListener(final DictionaryTableModel model, final JTextField field) {
-        this.model = model;
+    public InputSearchListener(final JTextField field) {
         this.field = field;
     }
 
     private void onChange(final String text) {
-        this.model.setFilter(text);
-        this.model.updateView();
+        Application.getInstance().getDictionaryModel().setFilter(text);
+        Application.getInstance().getDictionaryModel().updateView();
     }
 
     @Override

@@ -43,9 +43,9 @@ public class ApplicationFrame extends JFrame {
         this.componentMap.put("search-box", searchBox);
         searchBox.add(this);
 
-        final var autosavePane = new AutosavePane();
-        this.componentMap.put("autosave", autosavePane);
-        autosavePane.add(this);
+        final var checkboxOptions = new CheckboxOptionsPane();
+        this.componentMap.put("checkbox-options", checkboxOptions);
+        checkboxOptions.add(this);
 
         final var dictionaryView = new DictionaryView();
         this.componentMap.put("dictionary-view", dictionaryView);

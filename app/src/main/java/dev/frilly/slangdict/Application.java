@@ -88,6 +88,7 @@ public class Application {
         final var input = new DataInputStream(new BufferedInputStream(new FileInputStream(file)));
         I18n.setLocale(Locale.of(input.readUTF()));
         Configuration.setAutosave(input.readBoolean());
+        Configuration.setShowOnlyFavorites(input.readBoolean());
 
         input.close();
     }
@@ -132,6 +133,7 @@ public class Application {
         final var output = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(file)));
         output.writeUTF(Configuration.getLocale().getLanguage());
         output.writeBoolean(Configuration.isAutosave());
+        output.writeBoolean(Configuration.isShowOnlyFavorites());
 
         output.flush();
         output.close();

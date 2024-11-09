@@ -20,6 +20,7 @@ public final class ControlButtonsPane extends JComponent implements Translatable
 
     public ControlButtonsPane() {
         loadDefaultsButton = new JButton(I18n.tl("load-defaults"));
+        I18n.register(this);
     }
 
     public void add(final JFrame frame) {

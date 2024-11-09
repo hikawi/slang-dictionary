@@ -25,6 +25,7 @@ public class DictionaryModel extends AbstractTableModel implements Translatable 
     private String filter = "";
 
     public DictionaryModel() {
+        I18n.register(this);
     }
 
     /**
@@ -46,7 +47,17 @@ public class DictionaryModel extends AbstractTableModel implements Translatable 
                 .filter(entry -> entry.getValue() != null)
                 .filter(entry -> entry.getKey().toLowerCase().contains(filter.toLowerCase())
                         || entry.getValue().toLowerCase().contains(filter.toLowerCase()))
+                .filter(entry -> !Configuration.isShowOnlyFavorites() || Configuration.isFavorite(entry.getKey()))
                 .map(entry -> entry.getKey())
+                .sorted((a, b) -> {
+                    if (Configuration.isFavorite(a) && !Configuration.isFavorite(b))
+                        return -1; // a must be sorted first.
+                    if (Configuration.isFavorite(b) && !Configuration.isFavorite(a))
+                        return 1; // a must be sorted after.
+
+                    // That means both favorite values are equal, sort alphabetically.
+                    return a.compareTo(b);
+                })
                 .toList());
         this.fireTableDataChanged();
     }
@@ -120,6 +131,19 @@ public class DictionaryModel extends AbstractTableModel implements Translatable 
         columns[0] = I18n.tl("word");
         columns[1] = I18n.tl("definition");
         columns[2] = I18n.tl("favorite");
+    }
+
+    @Override
+    public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
+        final var word = this.displayedWords.get(rowIndex);
+        switch (columnIndex) {
+            case 2: // Favoriting
+                if ((Boolean) aValue)
+                    Configuration.addFavorite(word);
+                else
+                    Configuration.removeFavorite(word);
+                break;
+        }
     }
 
 }

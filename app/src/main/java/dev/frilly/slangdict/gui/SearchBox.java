@@ -11,6 +11,7 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 
 import dev.frilly.slangdict.I18n;
+import dev.frilly.slangdict.listener.InputSearchListener;
 
 /**
  * The search box for the slang dictionary.
@@ -32,6 +33,7 @@ public class SearchBox extends JComponent implements Translatable {
         searchBoxPanel.setLayout(layout);
 
         input.setPreferredSize(new Dimension(400, 20));
+        input.getDocument().addDocumentListener(new InputSearchListener(input));
 
         searchBoxPanel.add(label);
         searchBoxPanel.add(Box.createRigidArea(new Dimension(32, 0)));

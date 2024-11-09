@@ -17,6 +17,7 @@ public final class Configuration {
 
     private static Locale locale = Locale.ENGLISH;
     private static boolean autosave = true;
+    private static boolean showOnlyFavorites = false;
 
     private static Set<String> favoriteWords = new HashSet<>();
     private static List<String> words = new ArrayList<>(); // For natural ordering of words.
@@ -39,6 +40,14 @@ public final class Configuration {
 
     public static void setLocale(Locale locale) {
         Configuration.locale = locale;
+    }
+
+    public static void setShowOnlyFavorites(boolean showOnlyFavorites) {
+        Configuration.showOnlyFavorites = showOnlyFavorites;
+    }
+
+    public static boolean isShowOnlyFavorites() {
+        return showOnlyFavorites;
     }
 
     public static void clearWords() {
