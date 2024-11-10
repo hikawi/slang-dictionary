@@ -11,6 +11,8 @@ plugins {
     id("com.github.johnrengelman.shadow") version "7.1.2"
 }
 
+val version = "2.0"
+
 repositories {
     // Use Maven Central for resolving dependencies.
     mavenCentral()
@@ -43,12 +45,15 @@ tasks.jar {
         attributes["Manifest-Version"] = "1.0"
         attributes["Main-Class"] = "dev.frilly.slangdict.Application"
     }
+    archiveBaseName.set("SlangDictionary")
+    archiveVersion.set(version)
+    archiveClassifier.set("")
 }
 
 tasks.shadowJar {
-    archiveBaseName.set("slang-dictionary") // 出力JARの名前
-    archiveVersion.set("1.0") // バージョン
-    archiveClassifier.set("shadow") // ファイル名に「all」を追加
+    archiveBaseName.set("SlangDictionary") // 出力JARの名前
+    archiveVersion.set(version) // バージョン
+    archiveClassifier.set("full") // ファイル名に「all」を追加
 }
 
 tasks.named<Test>("test") {
