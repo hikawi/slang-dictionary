@@ -13,12 +13,15 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 
 import dev.frilly.slangdict.I18n;
+import dev.frilly.slangdict.features.file.NewDatabaseFeature;
+import dev.frilly.slangdict.interfaces.Overrideable;
 import dev.frilly.slangdict.interfaces.Translatable;
+import dev.frilly.slangdict.listener.DocumentChangeListener;
 
 /**
  * The simple frame to do a creation of a new database.
  */
-public final class CreationFrame implements Translatable {
+public final class CreationFrame implements Translatable, Overrideable {
 
     private static CreationFrame instance;
 
@@ -43,6 +46,7 @@ public final class CreationFrame implements Translatable {
         create = new JButton(I18n.tl("button.create"));
 
         this.setup();
+        this.setupActions();
         I18n.register(this);
     }
 
@@ -81,11 +85,23 @@ public final class CreationFrame implements Translatable {
         outerPane.add(pane);
     }
 
-    /**
-     * Take control over the main frame.
-     */
-    public void takeControl() {
-        MainFrame.getInstance().override(outerPane);
+    private void setupActions() {
+        field.getDocument().addDocumentListener((DocumentChangeListener) e -> {
+            create.setEnabled(!field.getText().isBlank());
+        });
+        field.setText("My Database");
+
+        cancel.addActionListener(e -> {
+            MainFrame.getInstance().back();
+        });
+        create.addActionListener(e -> {
+            new NewDatabaseFeature(field.getText(), bootstrap.isSelected()).run();
+        });
+    }
+
+    @Override
+    public JPanel getOverridingPane() {
+        return outerPane;
     }
 
     @Override

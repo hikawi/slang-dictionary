@@ -7,7 +7,9 @@ import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
@@ -21,10 +23,27 @@ public final class Dictionary {
 
     private String name;
     private File file;
-
     private Map<String, Word> words = new HashMap<>();
 
     private Dictionary() {
+    }
+
+    /**
+     * Gets the name of the current dictionary.
+     * 
+     * @return The name.
+     */
+    public String getName() {
+        return name;
+    }
+
+    /**
+     * Retrieves a view of the words map.
+     * 
+     * @return The words map, unmodifiable.
+     */
+    public Map<String, Word> getWords() {
+        return Collections.unmodifiableMap(words);
     }
 
     /**
@@ -60,6 +79,7 @@ public final class Dictionary {
             while (input.available() > 0) {
                 final var word = new Word();
                 word.word = input.readUTF();
+                word.definition = new ArrayList<>();
 
                 final var defLength = input.readInt();
                 for (int i = 0; i < defLength; i++)
@@ -91,14 +111,18 @@ public final class Dictionary {
         words.clear();
 
         try {
-            final var input = new BufferedInputStream(
-                    ClassLoader.getSystemClassLoader().getResourceAsStream("slang.txt"));
+            final var input = new BufferedInputStream(getClass().getResourceAsStream("/slang.txt"));
+            if (input == null)
+                throw new RuntimeException("No resource found");
+
             final var scanner = new Scanner(input);
 
             while (scanner.hasNext()) {
                 final var line = scanner.nextLine().split("`");
+
                 final var word = new Word();
                 word.word = line[0];
+                word.definition = new ArrayList<>();
                 Arrays.stream(line[1].split("|")).map(String::strip).forEach(word.definition::add);
                 words.put(word.word.toLowerCase(), word);
             }
@@ -115,7 +139,7 @@ public final class Dictionary {
      */
     public void save() {
         if (file == null)
-            throw new RuntimeException("No files are associated with the current dictionary.");
+            return;
 
         try {
             if (!file.exists())

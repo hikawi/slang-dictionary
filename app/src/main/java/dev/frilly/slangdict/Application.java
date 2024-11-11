@@ -48,7 +48,7 @@ public final class Application {
 
             final var frame = MainFrame.getInstance();
             frame.start();
-            WelcomeFrame.getInstance().takeControl();
+            MainFrame.getInstance().override(WelcomeFrame.getInstance());
         });
     }
 

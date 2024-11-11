@@ -9,9 +9,10 @@ import javax.swing.KeyStroke;
 
 import dev.frilly.slangdict.Application;
 import dev.frilly.slangdict.I18n;
-import dev.frilly.slangdict.features.file.NewDatabaseFeature;
 import dev.frilly.slangdict.features.file.OpenDatabaseFeature;
 import dev.frilly.slangdict.features.file.QuitFeature;
+import dev.frilly.slangdict.gui.CreationFrame;
+import dev.frilly.slangdict.gui.MainFrame;
 import dev.frilly.slangdict.interfaces.Translatable;
 
 /**
@@ -61,7 +62,7 @@ public final class FileMenu implements Translatable {
         setupSaveDatabase();
 
         newDatabase.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_N, Application.getMaskedMetaKey()));
-        newDatabase.addActionListener(e -> new NewDatabaseFeature().run());
+        newDatabase.addActionListener(e -> MainFrame.getInstance().override(CreationFrame.getInstance()));
 
         openDatabase.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, Application.getMaskedMetaKey()));
         openDatabase.addActionListener(e -> new OpenDatabaseFeature().run());

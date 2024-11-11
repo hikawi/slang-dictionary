@@ -1,10 +1,13 @@
 package dev.frilly.slangdict.gui;
 
+import java.awt.event.WindowEvent;
+import java.util.Stack;
+
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JPanel;
 
 import dev.frilly.slangdict.gui.menu.MainBar;
+import dev.frilly.slangdict.interfaces.Overrideable;
 
 /**
  * The application's frame. This is the one and only frame, no more frames
@@ -14,8 +17,12 @@ public final class MainFrame extends JFrame {
 
     private static MainFrame instance;
 
+    private final Stack<Overrideable> stack;
+    private Overrideable current;
+
     private MainFrame() {
         super("Slang Dictionary");
+        this.stack = new Stack<>();
         this.getRootPane().putClientProperty("apple.awt.windowTitleVisible", false);
         this.setup();
     }
@@ -36,10 +43,43 @@ public final class MainFrame extends JFrame {
     }
 
     /**
-     * Revalidates and repaints the frame.
+     * Push the current frame to the stack, then
+     * override the current pane with the new instance.
      */
-    public final void override(final JPanel contentPane) {
-        this.setContentPane(contentPane);
+    public final void override(final Overrideable instance) {
+        if (current != null)
+            stack.push(current);
+        current = instance;
+
+        this.setContentPane(instance.getOverridingPane());
+        rerender();
+    }
+
+    /**
+     * Override the pane with the new instance, without
+     * pushing the current frame to the stack.
+     * 
+     * @param instance The instance.
+     */
+    public final void replace(final Overrideable instance) {
+        current = instance;
+        this.setContentPane(instance.getOverridingPane());
+        rerender();
+    }
+
+    /**
+     * Go back to last frame.
+     */
+    public final void back() {
+        if (stack.isEmpty())
+            dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING)); // Close if back to nothing.
+
+        current = stack.pop();
+        this.setContentPane(current.getOverridingPane());
+        rerender();
+    }
+
+    private void rerender() {
         this.pack();
         this.setLocationRelativeTo(null);
         this.revalidate();

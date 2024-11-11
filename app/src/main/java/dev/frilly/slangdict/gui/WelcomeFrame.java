@@ -10,15 +10,15 @@ import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 
 import dev.frilly.slangdict.I18n;
-import dev.frilly.slangdict.features.file.NewDatabaseFeature;
 import dev.frilly.slangdict.features.file.OpenDatabaseFeature;
 import dev.frilly.slangdict.features.file.QuitFeature;
+import dev.frilly.slangdict.interfaces.Overrideable;
 import dev.frilly.slangdict.interfaces.Translatable;
 
 /**
  * The frame that welcomes you when you start up the program.
  */
-public final class WelcomeFrame implements Translatable {
+public final class WelcomeFrame implements Translatable, Overrideable {
 
     private static WelcomeFrame instance;
 
@@ -76,16 +76,14 @@ public final class WelcomeFrame implements Translatable {
     }
 
     private void setupActions() {
-        newDatabase.addActionListener(e -> new NewDatabaseFeature().run());
+        newDatabase.addActionListener(e -> MainFrame.getInstance().override(CreationFrame.getInstance()));
         openDatabase.addActionListener(e -> new OpenDatabaseFeature().run());
         quit.addActionListener(e -> new QuitFeature().run());
     }
 
-    /**
-     * Force this frame to take control over the main frame.
-     */
-    public void takeControl() {
-        MainFrame.getInstance().override(overarch);
+    @Override
+    public JPanel getOverridingPane() {
+        return overarch;
     }
 
     @Override
