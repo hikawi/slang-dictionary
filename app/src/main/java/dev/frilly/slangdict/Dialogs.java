@@ -19,7 +19,7 @@ public final class Dialogs {
      * @param args The args to pass.
      */
     public static void error(final String key, final Object... args) {
-        JOptionPane.showMessageDialog(MainFrame.getInstance(), I18n.tl(key, args), I18n.tl("error"),
+        JOptionPane.showMessageDialog(MainFrame.getInstance(), I18n.tl(key, args), I18n.tl("dialog.error"),
                 JOptionPane.ERROR_MESSAGE);
     }
 

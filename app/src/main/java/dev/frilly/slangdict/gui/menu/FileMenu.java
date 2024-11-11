@@ -9,6 +9,9 @@ import javax.swing.KeyStroke;
 
 import dev.frilly.slangdict.Application;
 import dev.frilly.slangdict.I18n;
+import dev.frilly.slangdict.features.file.NewDatabaseFeature;
+import dev.frilly.slangdict.features.file.OpenDatabaseFeature;
+import dev.frilly.slangdict.features.file.QuitFeature;
 import dev.frilly.slangdict.interfaces.Translatable;
 
 /**
@@ -27,6 +30,7 @@ public final class FileMenu implements Translatable {
     private final JMenuItem duplicateDatabase;
     private final JMenuItem deleteDatabase;
     private final JMenuItem resetDatabase;
+    private final JMenuItem quit;
 
     private FileMenu() {
         menu = new JMenu(I18n.tl("bar.file"));
@@ -38,17 +42,10 @@ public final class FileMenu implements Translatable {
         duplicateDatabase = new JMenuItem(I18n.tl("bar.file.duplicate"));
         deleteDatabase = new JMenuItem(I18n.tl("bar.file.delete"));
         resetDatabase = new JMenuItem(I18n.tl("bar.file.reset"));
+        quit = new JMenuItem(I18n.tl("bar.file.quit"));
 
         this.setup();
         I18n.register(this);
-    }
-
-    private void setupNewDatabase() {
-        newDatabase.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_N, Application.getMaskedMetaKey()));
-    }
-
-    private void setupOpenDatabase() {
-        openDatabase.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, Application.getMaskedMetaKey()));
     }
 
     private void setupRenameDatabase() {
@@ -59,23 +56,19 @@ public final class FileMenu implements Translatable {
         saveDatabase.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, Application.getMaskedMetaKey()));
     }
 
-    private void setupDuplicateDatabase() {
-    }
-
-    private void setupDeleteDatabase() {
-    }
-
-    private void setupResetDatabase() {
-    }
-
     private void setup() {
-        setupNewDatabase();
-        setupOpenDatabase();
         setupRenameDatabase();
         setupSaveDatabase();
-        setupDuplicateDatabase();
-        setupDeleteDatabase();
-        setupResetDatabase();
+
+        newDatabase.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_N, Application.getMaskedMetaKey()));
+        newDatabase.addActionListener(e -> new NewDatabaseFeature().run());
+
+        openDatabase.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, Application.getMaskedMetaKey()));
+        openDatabase.addActionListener(e -> new OpenDatabaseFeature().run());
+
+        quit.setAccelerator(
+                KeyStroke.getKeyStroke(KeyEvent.VK_W, Application.getMaskedMetaKey() | KeyEvent.SHIFT_DOWN_MASK));
+        quit.addActionListener(e -> new QuitFeature().run());
 
         menu.add(newDatabase);
         menu.add(openDatabase);
@@ -88,6 +81,9 @@ public final class FileMenu implements Translatable {
         menu.addSeparator();
 
         menu.add(resetDatabase);
+        menu.addSeparator();
+
+        menu.add(quit);
     }
 
     /**
@@ -122,6 +118,7 @@ public final class FileMenu implements Translatable {
         duplicateDatabase.setText(I18n.tl("bar.file.duplicate"));
         deleteDatabase.setText(I18n.tl("bar.file.delete"));
         resetDatabase.setText(I18n.tl("bar.file.reset"));
+        quit.setText(I18n.tl("bar.file.quit"));
     }
 
 }

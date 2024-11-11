@@ -2,6 +2,7 @@ package dev.frilly.slangdict.gui;
 
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JPanel;
 
 import dev.frilly.slangdict.gui.menu.MainBar;
 
@@ -37,7 +38,10 @@ public final class MainFrame extends JFrame {
     /**
      * Revalidates and repaints the frame.
      */
-    public final void rerender() {
+    public final void override(final JPanel contentPane) {
+        this.setContentPane(contentPane);
+        this.pack();
+        this.setLocationRelativeTo(null);
         this.revalidate();
         this.repaint();
     }

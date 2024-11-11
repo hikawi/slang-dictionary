@@ -2,8 +2,10 @@ package dev.frilly.slangdict;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -44,6 +46,42 @@ public final class Dictionary {
     }
 
     /**
+     * Loads the specified file.
+     */
+    public void load() {
+        if (file == null || !file.exists())
+            return;
+
+        try {
+            final var tempDict = new HashMap<String, Word>();
+            final var input = new DataInputStream(new BufferedInputStream(new FileInputStream(file)));
+            rename(input.readUTF());
+
+            while (input.available() > 0) {
+                final var word = new Word();
+                word.word = input.readUTF();
+
+                final var defLength = input.readInt();
+                for (int i = 0; i < defLength; i++)
+                    word.definition.add(input.readUTF());
+
+                word.favorite = input.readBoolean();
+                word.locked = input.readBoolean();
+                tempDict.put(word.word.toLowerCase(), word);
+            }
+
+            input.close();
+
+            // No errors happened.
+            words.clear();
+            words.putAll(tempDict);
+        } catch (Exception e) {
+            e.printStackTrace();
+            Dialogs.error("file.load.error", file.getName());
+        }
+    }
+
+    /**
      * Loads the defaults dictionary.
      * 
      * The defaults slang.txt in the .jar file has a different format
@@ -68,7 +106,7 @@ public final class Dictionary {
             scanner.close();
         } catch (Exception e) {
             e.printStackTrace();
-            Dialogs.error("file.load.error");
+            Dialogs.error("file.load.error", "slang.txt");
         }
     }
 

@@ -7,6 +7,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
 
+import dev.frilly.slangdict.gui.MainFrame;
 import dev.frilly.slangdict.interfaces.Translatable;
 
 /**
@@ -89,6 +90,10 @@ public final class I18n {
      */
     public static void reloadTranslations() {
         translatables.forEach(Translatable::updateTranslations);
+
+        // Recenter
+        MainFrame.getInstance().pack();
+        MainFrame.getInstance().setLocationRelativeTo(null);
     }
 
 }

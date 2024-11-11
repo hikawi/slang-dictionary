@@ -10,6 +10,7 @@ import com.formdev.flatlaf.themes.FlatMacDarkLaf;
 import com.formdev.flatlaf.util.SystemInfo;
 
 import dev.frilly.slangdict.gui.MainFrame;
+import dev.frilly.slangdict.gui.WelcomeFrame;
 
 /**
  * The main entrypoint of the application.
@@ -47,6 +48,7 @@ public final class Application {
 
             final var frame = MainFrame.getInstance();
             frame.start();
+            WelcomeFrame.getInstance().takeControl();
         });
     }
 
