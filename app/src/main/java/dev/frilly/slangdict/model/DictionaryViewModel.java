@@ -31,8 +31,7 @@ public final class DictionaryViewModel extends AbstractTableModel {
             final var start = System.currentTimeMillis();
             Dictionary.getInstance().getWords().entrySet().parallelStream()
                     .filter(e -> e.getKey().toLowerCase().contains(query.toLowerCase())
-                            || e.getValue().definition.stream()
-                                    .anyMatch(s -> s.toLowerCase().contains(query.toLowerCase())))
+                            || e.getValue().definition.toLowerCase().contains(query.toLowerCase()))
                     .map(e -> e.getKey())
                     .sorted()
                     .forEach(displayedWords::add);
@@ -44,8 +43,7 @@ public final class DictionaryViewModel extends AbstractTableModel {
     @Override
     public Class<?> getColumnClass(int columnIndex) {
         return switch (columnIndex) {
-            case 0 -> String.class;
-            case 1 -> List.class;
+            case 0, 1 -> String.class;
             case 2, 3 -> Boolean.class;
             default -> Object.class;
         };

@@ -9,7 +9,7 @@ import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
-import com.formdev.flatlaf.intellijthemes.materialthemeuilite.FlatAtomOneDarkIJTheme;
+import com.formdev.flatlaf.intellijthemes.FlatDarkFlatIJTheme;
 import com.formdev.flatlaf.util.SystemInfo;
 
 import dev.frilly.slangdict.gui.MainFrame;
@@ -60,7 +60,7 @@ public final class Application {
 
         // Start the program.
         SwingUtilities.invokeLater(() -> {
-            FlatAtomOneDarkIJTheme.setup();
+            FlatDarkFlatIJTheme.setup();
 
             final var frame = MainFrame.getInstance();
             frame.start();

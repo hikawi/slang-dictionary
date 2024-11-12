@@ -7,8 +7,6 @@ import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -83,12 +81,7 @@ public final class Dictionary {
             while (input.available() > 0) {
                 final var word = new Word();
                 word.word = input.readUTF();
-                word.definition = new ArrayList<>();
-
-                final var defLength = input.readInt();
-                for (int i = 0; i < defLength; i++)
-                    word.definition.add(input.readUTF());
-
+                word.definition = input.readUTF();
                 word.favorite = input.readBoolean();
                 word.locked = input.readBoolean();
                 tempDict.put(word.word.toLowerCase(), word);
@@ -126,16 +119,7 @@ public final class Dictionary {
 
                 final var word = new Word();
                 word.word = line[0];
-                word.definition = new ArrayList<>();
-
-                final var split = line[1].split("\\|");
-                if (split.length == 1)
-                    word.definition.add(line[1].strip());
-                else
-                    Arrays.stream(split).map(String::strip).forEach(word.definition::add);
-
-                System.out.printf("Added word %s, to list of definitions size %d: %s\n", word.word, split.length,
-                        word.definition.stream().reduce((s1, s2) -> s1 + "\n" + s2));
+                word.definition = line[1];
                 words.put(word.word.toLowerCase(), word);
             }
 
@@ -162,10 +146,7 @@ public final class Dictionary {
 
             for (final var word : words.values()) {
                 output.writeUTF(word.word);
-                output.writeInt(word.definition.size());
-                for (final var def : word.definition)
-                    output.writeUTF(def);
-
+                output.writeUTF(word.definition);
                 output.writeBoolean(word.favorite);
                 output.writeBoolean(word.locked);
             }

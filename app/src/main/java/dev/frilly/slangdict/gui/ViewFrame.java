@@ -2,7 +2,6 @@ package dev.frilly.slangdict.gui;
 
 import java.awt.Dimension;
 import java.awt.GridBagLayout;
-import java.util.List;
 
 import javax.swing.BorderFactory;
 import javax.swing.GroupLayout;
@@ -21,7 +20,6 @@ import dev.frilly.slangdict.interfaces.Overrideable;
 import dev.frilly.slangdict.interfaces.Translatable;
 import dev.frilly.slangdict.listener.DocumentChangeListener;
 import dev.frilly.slangdict.model.DictionaryViewModel;
-import dev.frilly.slangdict.model.DictionaryViewRenderer;
 
 /**
  * Implementation of the probably most used frame of this application.
@@ -76,6 +74,10 @@ public final class ViewFrame implements Overrideable, Translatable {
         this.outerPane.setLayout(new GridBagLayout());
         this.pane = new JPanel();
 
+        databaseName.putClientProperty("FlatLaf.styleClass", "h3");
+        searchLabel.putClientProperty("FlatLaf.styleClass", "medium");
+        searchResult.putClientProperty("FlatLaf.styleClass", "semibold");
+
         this.setup();
         this.setupActions();
         I18n.register(this);
@@ -86,7 +88,6 @@ public final class ViewFrame implements Overrideable, Translatable {
         pane.setLayout(layout);
         pane.setBorder(BorderFactory.createEmptyBorder(32, 16, 32, 16));
 
-        table.setDefaultRenderer(List.class, new DictionaryViewRenderer());
         searchBox.setPreferredSize(new Dimension(600, 24));
         tableModel.query("").thenAccept(q -> {
             queryCount = q.queryCount();
