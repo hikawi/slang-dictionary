@@ -1,6 +1,7 @@
 package dev.frilly.slangdict.gui;
 
 import java.awt.GridBagLayout;
+import java.awt.Insets;
 
 import javax.swing.BorderFactory;
 import javax.swing.GroupLayout;
@@ -9,6 +10,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 
+import dev.frilly.slangdict.Application;
 import dev.frilly.slangdict.I18n;
 import dev.frilly.slangdict.features.file.OpenDatabaseFeature;
 import dev.frilly.slangdict.features.file.QuitFeature;
@@ -56,6 +58,16 @@ public final class WelcomeFrame implements Translatable, Overrideable {
         layout.setAutoCreateContainerGaps(true);
         panel.setBorder(BorderFactory.createEmptyBorder(32, 32, 32, 32));
 
+        final var libraryAddIcon = Application.getIcon(getClass().getResource("/icons/library-add.png"), 16, 16);
+        newDatabase.setIcon(libraryAddIcon);
+        newDatabase.setMargin(new Insets(8, 16, 8, 16));
+
+        final var fileOpenIcon = Application.getIcon(getClass().getResource("/icons/file-open.png"), 16, 16);
+        openDatabase.setIcon(fileOpenIcon);
+
+        final var quitIcon = Application.getIcon(getClass().getResource("/icons/exit.png"), 16, 16);
+        quit.setIcon(quitIcon);
+
         layout.setVerticalGroup(layout.createSequentialGroup()
                 .addComponent(welcomeText)
                 .addGap(16, 24, 32)
@@ -72,6 +84,7 @@ public final class WelcomeFrame implements Translatable, Overrideable {
                         .addComponent(quit)));
 
         layout.linkSize(SwingConstants.HORIZONTAL, newDatabase, openDatabase, quit);
+        layout.linkSize(SwingConstants.VERTICAL, newDatabase, openDatabase, quit);
         overarch.add(panel);
     }
 

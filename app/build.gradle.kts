@@ -27,6 +27,7 @@ dependencies {
     // This dependency is used by the application.
     implementation(libs.guava)
     implementation("com.formdev:flatlaf:3.5.2")
+    implementation("com.formdev:flatlaf-intellij-themes:3.5.2")
 }
 
 // Apply a specific Java toolchain to ease working on different environments.

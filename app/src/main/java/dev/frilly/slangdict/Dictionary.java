@@ -46,6 +46,10 @@ public final class Dictionary {
         return Collections.unmodifiableMap(words);
     }
 
+    public Word getWord(final String key) {
+        return this.words.get(key.toLowerCase());
+    }
+
     /**
      * Renames the current dictionary instance.
      * 
@@ -123,7 +127,15 @@ public final class Dictionary {
                 final var word = new Word();
                 word.word = line[0];
                 word.definition = new ArrayList<>();
-                Arrays.stream(line[1].split("|")).map(String::strip).forEach(word.definition::add);
+
+                final var split = line[1].split("\\|");
+                if (split.length == 1)
+                    word.definition.add(line[1].strip());
+                else
+                    Arrays.stream(split).map(String::strip).forEach(word.definition::add);
+
+                System.out.printf("Added word %s, to list of definitions size %d: %s\n", word.word, split.length,
+                        word.definition.stream().reduce((s1, s2) -> s1 + "\n" + s2));
                 words.put(word.word.toLowerCase(), word);
             }
 

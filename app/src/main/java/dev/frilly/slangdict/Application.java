@@ -1,12 +1,15 @@
 package dev.frilly.slangdict;
 
+import java.awt.Image;
 import java.awt.Toolkit;
+import java.net.URL;
 
+import javax.swing.ImageIcon;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
-import com.formdev.flatlaf.themes.FlatMacDarkLaf;
+import com.formdev.flatlaf.intellijthemes.materialthemeuilite.FlatAtomOneDarkIJTheme;
 import com.formdev.flatlaf.util.SystemInfo;
 
 import dev.frilly.slangdict.gui.MainFrame;
@@ -24,6 +27,19 @@ public final class Application {
      */
     public static int getMaskedMetaKey() {
         return Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx();
+    }
+
+    /**
+     * Retrieves a scaled version of the icon on the classpath.
+     * 
+     * @param url    The load url.
+     * @param width  The width to scale to.
+     * @param height The height to scale to.
+     * @return The scaled image.
+     */
+    public static ImageIcon getIcon(final URL url, final int width, final int height) {
+        final var raw = new ImageIcon(url);
+        return new ImageIcon(raw.getImage().getScaledInstance(width, height, Image.SCALE_SMOOTH));
     }
 
     public static void main(String[] args) {
@@ -44,7 +60,7 @@ public final class Application {
 
         // Start the program.
         SwingUtilities.invokeLater(() -> {
-            FlatMacDarkLaf.setup();
+            FlatAtomOneDarkIJTheme.setup();
 
             final var frame = MainFrame.getInstance();
             frame.start();

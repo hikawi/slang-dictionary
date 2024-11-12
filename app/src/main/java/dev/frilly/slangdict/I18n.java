@@ -55,7 +55,7 @@ public final class I18n {
             final var value = bundles.get(locale).getString(key);
             return value.formatted(args);
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.printf("Not found tl key for %s.%n", key);
             return key;
         }
     }

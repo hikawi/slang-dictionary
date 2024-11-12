@@ -72,18 +72,12 @@ public final class ViewMenu implements Translatable {
     private void setupLanguages() {
         langEnglish.addActionListener(e -> {
             I18n.setLocale(Locale.ENGLISH);
-            langJapanese.setSelected(false);
-            langVietnamese.setSelected(false);
         });
         langJapanese.addActionListener(e -> {
             I18n.setLocale(Locale.JAPANESE);
-            langEnglish.setSelected(false);
-            langVietnamese.setSelected(false);
         });
         langVietnamese.addActionListener(e -> {
             I18n.setLocale(Locale.of("vi"));
-            langJapanese.setSelected(false);
-            langEnglish.setSelected(false);
         });
     }
 
