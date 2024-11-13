@@ -7,6 +7,7 @@ import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -23,8 +24,7 @@ public final class Dictionary {
     private File file;
     private Map<String, Word> words = new HashMap<>();
 
-    private Dictionary() {
-    }
+    private Dictionary() {}
 
     /**
      * Gets the name of the current dictionary.
@@ -75,13 +75,18 @@ public final class Dictionary {
 
         try {
             final var tempDict = new HashMap<String, Word>();
-            final var input = new DataInputStream(new BufferedInputStream(new FileInputStream(file)));
+            final var input =
+                    new DataInputStream(new BufferedInputStream(new FileInputStream(file)));
             rename(input.readUTF());
 
             while (input.available() > 0) {
                 final var word = new Word();
                 word.word = input.readUTF();
-                word.definition = input.readUTF();
+
+                final var length = input.readInt();
+                for (int i = 0; i < length; i++)
+                    word.definition.add(input.readUTF());
+
                 word.favorite = input.readBoolean();
                 word.locked = input.readBoolean();
                 tempDict.put(word.word.toLowerCase(), word);
@@ -101,8 +106,8 @@ public final class Dictionary {
     /**
      * Loads the defaults dictionary.
      * 
-     * The defaults slang.txt in the .jar file has a different format
-     * from the normally saved dictionary.
+     * The defaults slang.txt in the .jar file has a different format from the normally saved
+     * dictionary.
      */
     public void loadDefaults() {
         loadDefaults(false);
@@ -111,8 +116,8 @@ public final class Dictionary {
     /**
      * Loads the defaults dictionary.
      * 
-     * The defaults slang.txt in the .jar file has a different format
-     * from the normally saved dictionary.
+     * The defaults slang.txt in the .jar file has a different format from the normally saved
+     * dictionary.
      */
     public void loadDefaults(boolean is100k) {
         final var file = is100k ? "/slang-100k.txt" : "/slang.txt";
@@ -130,7 +135,7 @@ public final class Dictionary {
 
                 final var word = new Word();
                 word.word = line[0];
-                word.definition = line[1];
+                word.definition = Arrays.stream(line[1].split("\\|")).map(String::strip).toList();
                 words.put(word.word.toLowerCase(), word);
             }
 
@@ -152,12 +157,15 @@ public final class Dictionary {
             if (!file.exists())
                 file.createNewFile();
 
-            final var output = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(file)));
+            final var output =
+                    new DataOutputStream(new BufferedOutputStream(new FileOutputStream(file)));
             output.writeUTF(name);
 
             for (final var word : words.values()) {
                 output.writeUTF(word.word);
-                output.writeUTF(word.definition);
+                output.writeInt(word.definition.size());
+                for (var def : word.definition)
+                    output.writeUTF(def);
                 output.writeBoolean(word.favorite);
                 output.writeBoolean(word.locked);
             }

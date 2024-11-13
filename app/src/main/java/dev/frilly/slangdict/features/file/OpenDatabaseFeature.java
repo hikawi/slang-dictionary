@@ -2,10 +2,10 @@ package dev.frilly.slangdict.features.file;
 
 import javax.swing.JFileChooser;
 import javax.swing.filechooser.FileNameExtensionFilter;
-
 import dev.frilly.slangdict.Dictionary;
 import dev.frilly.slangdict.I18n;
 import dev.frilly.slangdict.gui.MainFrame;
+import dev.frilly.slangdict.gui.ProgressFrame;
 import dev.frilly.slangdict.gui.ViewFrame;
 
 /**
@@ -19,16 +19,29 @@ public final class OpenDatabaseFeature implements Runnable {
     public void run() {
         final var file = new JFileChooser("./.data/dbs");
         file.setFileSelectionMode(JFileChooser.FILES_ONLY);
-        file.setFileFilter(new FileNameExtensionFilter(I18n.tl("file.nameFilter", ".dict"), "dict"));
+        file.setFileFilter(
+                new FileNameExtensionFilter(I18n.tl("file.nameFilter", ".dict"), "dict"));
 
         switch (file.showOpenDialog(MainFrame.getInstance())) {
             case JFileChooser.CANCEL_OPTION:
                 break;
             case JFileChooser.APPROVE_OPTION:
-                final var f = file.getSelectedFile();
-                Dictionary.getInstance().setFile(f);
-                Dictionary.getInstance().load();
-                MainFrame.getInstance().override(ViewFrame.getInstance());
+                ProgressFrame.getInstance().setHeading(I18n.tl("file.open.progress"));
+                ProgressFrame.getInstance().startTask(() -> {
+                    ProgressFrame.getInstance().setMessage("file.open.progress.init");
+                    ProgressFrame.getInstance().setProgress(1);
+                    final var f = file.getSelectedFile();
+
+                    ProgressFrame.getInstance().setMessage("file.open.progress.load");
+                    ProgressFrame.getInstance().setProgress(20);
+                    Dictionary.getInstance().setFile(f);
+                    Dictionary.getInstance().load();
+
+                    ProgressFrame.getInstance().setMessage("file.open.progress.draw");
+                    ProgressFrame.getInstance().setProgress(50);
+                    ViewFrame.getInstance(); // Make it load first.
+                    MainFrame.getInstance().replace(ViewFrame.getInstance());
+                }, null, null);
                 break;
         }
     }

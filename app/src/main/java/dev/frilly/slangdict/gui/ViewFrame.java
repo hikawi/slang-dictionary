@@ -2,6 +2,12 @@ package dev.frilly.slangdict.gui;
 
 import java.awt.Dimension;
 import java.awt.GridBagLayout;
+import java.awt.GridLayout;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.Future;
+import java.util.stream.IntStream;
 import javax.swing.BorderFactory;
 import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
@@ -9,7 +15,6 @@ import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.LayoutStyle;
 import dev.frilly.slangdict.Application;
@@ -18,7 +23,7 @@ import dev.frilly.slangdict.I18n;
 import dev.frilly.slangdict.interfaces.Overrideable;
 import dev.frilly.slangdict.interfaces.Translatable;
 import dev.frilly.slangdict.listener.DocumentChangeListener;
-import dev.frilly.slangdict.model.DictionaryViewModel;
+import dev.frilly.slangdict.model.DictionaryCellRenderer;
 
 /**
  * Implementation of the probably most used frame of this application.
@@ -33,10 +38,10 @@ public final class ViewFrame implements Overrideable, Translatable {
     // DATA MODELS
     // -------------
 
-    private int queryCount = 2000;
-    private double queryTime = 0.1;
+    private volatile int queryCount = 0;
+    private volatile double queryTime = 0;
 
-    private DictionaryViewModel tableModel = new DictionaryViewModel();
+    private Future future;
 
     // -------------
     // UI Components.
@@ -70,9 +75,13 @@ public final class ViewFrame implements Overrideable, Translatable {
     private final JButton saveButton = new JButton();
     private final JButton reloadButton = new JButton();
 
-    // Dictionary display.
-    private final JTable table = new JTable(tableModel);
-    private final JScrollPane scrollPane = new JScrollPane(table);
+    // Dictionary display. We're using a variation of scroll pane to make sure that not all data is
+    // rendered at all time to improve performance.
+    private final JPanel dictionaryViewport = new JPanel(new GridLayout(5, 1, 0, 16));
+    private final List<DictionaryCellRenderer> viewportCells =
+            IntStream.range(0, 5).mapToObj(i -> new DictionaryCellRenderer()).toList();
+    private final JScrollPane viewportScroll = new JScrollPane(dictionaryViewport);
+    private final List<String> displayedWords = new CopyOnWriteArrayList<>();
 
     private ViewFrame() {
         this.outerPane = new JPanel();
@@ -99,19 +108,56 @@ public final class ViewFrame implements Overrideable, Translatable {
         I18n.register(this);
     }
 
+    private void query(final String txt) {
+        // Cancel the current querying if there's another query coming.
+        try {
+            if (future != null)
+                future.cancel(true);
+        } catch (Exception e) {
+        }
+
+        future = CompletableFuture.runAsync(() -> {
+            displayedWords.clear();
+            final var time = System.currentTimeMillis();
+            Dictionary.getInstance().getWords().entrySet().parallelStream()
+                    .filter(e -> e.getKey().toLowerCase().contains(txt.toLowerCase())
+                            || e.getValue().definition.stream()
+                                    .anyMatch(s -> s.toLowerCase().contains(txt.toLowerCase())))
+                    .map(e -> e.getKey()).sorted().forEach(displayedWords::add);
+            queryCount = displayedWords.size();
+            queryTime = (System.currentTimeMillis() - time) / 1000.0;
+        }).thenRun(() -> {
+            updateTranslations();
+            repaint(0);
+
+            final var paneHeight = viewportCells.get(0).getHeight();
+            viewportScroll.getVerticalScrollBar().getModel().setRangeProperties(0, paneHeight, 0,
+                    paneHeight * displayedWords.size(), false);;
+        });
+    }
+
+    private void repaint(final int i) {
+        for (var idx = i; idx < displayedWords.size() && idx < idx + 5; idx++) {
+            final var word = Dictionary.getInstance().getWord(displayedWords.get(idx));
+            viewportCells.get(idx - i).setWord(word);
+        }
+        viewportScroll.revalidate();
+        viewportScroll.repaint();
+    }
+
     private void setup() {
         final var layout = new GroupLayout(pane);
         pane.setLayout(layout);
         pane.setBorder(BorderFactory.createEmptyBorder(32, 16, 32, 16));
 
         searchBox.setPreferredSize(new Dimension(600, 24));
-        tableModel.query("").thenAccept(q -> {
-            queryCount = q.queryCount();
-            queryTime = q.time();
-            updateTranslations();
+        viewportCells.forEach(dictionaryViewport::add);
+        viewportScroll.getVerticalScrollBar().getModel().addChangeListener(e -> {
+            final var i = viewportScroll.getVerticalScrollBar().getValue()
+                    / viewportScroll.getVerticalScrollBar().getUnitIncrement();
+            repaint(i);
         });
-        scrollPane.setPreferredSize(new Dimension(1200, 600));
-        table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+        query("");
 
         layout.setVerticalGroup(layout.createSequentialGroup().addComponent(backButton).addGap(24)
                 .addGroup(layout.createBaselineGroup(true, false).addComponent(usingLabel)
@@ -127,7 +173,7 @@ public final class ViewFrame implements Overrideable, Translatable {
                                 .addComponent(favoriteButton).addComponent(lockButton))
                         .addGroup(layout.createParallelGroup(Alignment.TRAILING)
                                 .addComponent(saveButton).addComponent(reloadButton)))
-                .addGap(6, 8, 10).addComponent(scrollPane));
+                .addGap(6, 8, 10).addComponent(viewportScroll));
 
         layout.setHorizontalGroup(
                 layout.createParallelGroup().addComponent(backButton)
@@ -145,7 +191,7 @@ public final class ViewFrame implements Overrideable, Translatable {
                                         GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                                 .addGroup(layout.createSequentialGroup().addComponent(saveButton)
                                         .addComponent(reloadButton)))
-                        .addComponent(scrollPane));
+                        .addComponent(viewportScroll));
 
         layout.linkSize(addButton, deleteButton, favoriteButton, lockButton, reloadButton,
                 saveButton);
@@ -155,11 +201,7 @@ public final class ViewFrame implements Overrideable, Translatable {
     private void setupActions() {
         searchBox.getDocument().addDocumentListener((DocumentChangeListener) e -> {
             searchResult.setText(I18n.tl("view.querying"));
-            tableModel.query(searchBox.getText()).thenAccept(q -> {
-                queryCount = q.queryCount();
-                queryTime = q.time();
-                updateTranslations();
-            });
+            query(searchBox.getText());
         });
 
         backButton.addActionListener(e -> {
