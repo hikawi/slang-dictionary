@@ -13,13 +13,16 @@ import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
 import javax.swing.JButton;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
 import javax.swing.JTextField;
-import javax.swing.LayoutStyle;
 import dev.frilly.slangdict.Application;
+import dev.frilly.slangdict.Dialogs;
 import dev.frilly.slangdict.Dictionary;
 import dev.frilly.slangdict.I18n;
+import dev.frilly.slangdict.features.file.BombFeature;
+import dev.frilly.slangdict.features.file.ReloadFeature;
+import dev.frilly.slangdict.features.file.SaveFeature;
 import dev.frilly.slangdict.interfaces.Overrideable;
 import dev.frilly.slangdict.interfaces.Translatable;
 import dev.frilly.slangdict.listener.DocumentChangeListener;
@@ -41,7 +44,7 @@ public final class ViewFrame implements Overrideable, Translatable {
     private volatile int queryCount = 0;
     private volatile double queryTime = 0;
 
-    private Future future;
+    private Future<?> future;
 
     // -------------
     // UI Components.
@@ -65,23 +68,24 @@ public final class ViewFrame implements Overrideable, Translatable {
     private final JTextField searchBox = new JTextField();
     private final JLabel searchResult = new JLabel();
 
-    // Buttons, first set are editorial buttons on the left, second set are database
-    // buttons on the right
+    // Database-wide buttons
     private final JButton addButton = new JButton();
-    private final JButton deleteButton = new JButton();
-    private final JButton lockButton = new JButton();
-    private final JButton favoriteButton = new JButton();
-
+    private final JButton bombButton = new JButton();
     private final JButton saveButton = new JButton();
     private final JButton reloadButton = new JButton();
 
-    // Dictionary display. We're using a variation of scroll pane to make sure that not all data is
-    // rendered at all time to improve performance.
+    // Dictionary display. We're only showing 5 words to make sure that not all data is
+    // rendered at all time to improve performance. We're gonna use pages instead.
     private final JPanel dictionaryViewport = new JPanel(new GridLayout(5, 1, 0, 16));
     private final List<DictionaryCellRenderer> viewportCells =
             IntStream.range(0, 5).mapToObj(i -> new DictionaryCellRenderer()).toList();
-    private final JScrollPane viewportScroll = new JScrollPane(dictionaryViewport);
     private final List<String> displayedWords = new CopyOnWriteArrayList<>();
+
+    // Pagination data.
+    private volatile int page = 0;
+    private final JButton previousButton = new JButton();
+    private final JButton nextButton = new JButton();
+    private final JLabel pageText = new JLabel();
 
     private ViewFrame() {
         this.outerPane = new JPanel();
@@ -94,14 +98,13 @@ public final class ViewFrame implements Overrideable, Translatable {
 
         backButton.setIcon(Application.getIcon(getClass().getResource("/icons/back.png"), 12, 12));
         addButton.setIcon(Application.getIcon(getClass().getResource("/icons/add.png"), 24, 24));
-        deleteButton
-                .setIcon(Application.getIcon(getClass().getResource("/icons/remove.png"), 24, 24));
-        favoriteButton
-                .setIcon(Application.getIcon(getClass().getResource("/icons/star.png"), 24, 24));
-        lockButton.setIcon(Application.getIcon(getClass().getResource("/icons/lock.png"), 24, 24));
+        bombButton.setIcon(Application.getIcon(getClass().getResource("/icons/bomb.png"), 24, 24));
         saveButton.setIcon(Application.getIcon(getClass().getResource("/icons/save.png"), 24, 24));
         reloadButton
                 .setIcon(Application.getIcon(getClass().getResource("/icons/refresh.png"), 24, 24));
+        nextButton.setIcon(Application.getIcon(getClass().getResource("/icons/next.png"), 24, 24));
+        previousButton.setIcon(
+                Application.getIcon(getClass().getResource("/icons/previous.png"), 24, 24));
 
         this.setup();
         this.setupActions();
@@ -119,30 +122,32 @@ public final class ViewFrame implements Overrideable, Translatable {
         future = CompletableFuture.runAsync(() -> {
             displayedWords.clear();
             final var time = System.currentTimeMillis();
-            Dictionary.getInstance().getWords().entrySet().parallelStream()
-                    .filter(e -> e.getKey().toLowerCase().contains(txt.toLowerCase())
-                            || e.getValue().definition.stream()
-                                    .anyMatch(s -> s.toLowerCase().contains(txt.toLowerCase())))
-                    .map(e -> e.getKey()).sorted().forEach(displayedWords::add);
+            Dictionary.getInstance().query(txt).forEach(displayedWords::add);
             queryCount = displayedWords.size();
             queryTime = (System.currentTimeMillis() - time) / 1000.0;
         }).thenRun(() -> {
+            page = 0;
+            repaint();
             updateTranslations();
-            repaint(0);
-
-            final var paneHeight = viewportCells.get(0).getHeight();
-            viewportScroll.getVerticalScrollBar().getModel().setRangeProperties(0, paneHeight, 0,
-                    paneHeight * displayedWords.size(), false);;
         });
     }
 
-    private void repaint(final int i) {
-        for (var idx = i; idx < displayedWords.size() && idx < idx + 5; idx++) {
-            final var word = Dictionary.getInstance().getWord(displayedWords.get(idx));
-            viewportCells.get(idx - i).setWord(word);
+    private void repaint() {
+        for (var idx = page * 5; idx < page * 5 + 5; idx++) {
+            if (idx >= displayedWords.size()) {
+                viewportCells.get(idx - page * 5).setWord(null);
+            } else {
+                final var word = Dictionary.getInstance().getWord(displayedWords.get(idx));
+                viewportCells.get(idx - page * 5).setWord(word);
+            }
         }
-        viewportScroll.revalidate();
-        viewportScroll.repaint();
+
+        previousButton.setEnabled(true);
+        nextButton.setEnabled(true);
+        if (page == 0)
+            previousButton.setEnabled(false);
+        if (page * 5 + 5 >= displayedWords.size())
+            nextButton.setEnabled(false);
     }
 
     private void setup() {
@@ -152,11 +157,6 @@ public final class ViewFrame implements Overrideable, Translatable {
 
         searchBox.setPreferredSize(new Dimension(600, 24));
         viewportCells.forEach(dictionaryViewport::add);
-        viewportScroll.getVerticalScrollBar().getModel().addChangeListener(e -> {
-            final var i = viewportScroll.getVerticalScrollBar().getValue()
-                    / viewportScroll.getVerticalScrollBar().getUnitIncrement();
-            repaint(i);
-        });
         query("");
 
         layout.setVerticalGroup(layout.createSequentialGroup().addComponent(backButton).addGap(24)
@@ -167,13 +167,12 @@ public final class ViewFrame implements Overrideable, Translatable {
                 .addGroup(layout.createParallelGroup(Alignment.BASELINE).addComponent(searchLabel)
                         .addComponent(searchBox))
                 .addComponent(searchResult).addGap(16, 20, 24)
-                .addGroup(layout.createParallelGroup(Alignment.CENTER)
-                        .addGroup(layout.createParallelGroup(Alignment.LEADING)
-                                .addComponent(addButton).addComponent(deleteButton)
-                                .addComponent(favoriteButton).addComponent(lockButton))
-                        .addGroup(layout.createParallelGroup(Alignment.TRAILING)
-                                .addComponent(saveButton).addComponent(reloadButton)))
-                .addGap(6, 8, 10).addComponent(viewportScroll));
+                .addGroup(layout.createParallelGroup(Alignment.TRAILING).addComponent(addButton)
+                        .addComponent(bombButton).addComponent(saveButton)
+                        .addComponent(reloadButton))
+                .addGap(12).addComponent(dictionaryViewport).addGap(6)
+                .addGroup(layout.createParallelGroup(Alignment.CENTER).addComponent(previousButton)
+                        .addComponent(pageText).addComponent(nextButton)));
 
         layout.setHorizontalGroup(
                 layout.createParallelGroup().addComponent(backButton)
@@ -183,18 +182,16 @@ public final class ViewFrame implements Overrideable, Translatable {
                         .addGroup(layout.createSequentialGroup().addComponent(searchLabel)
                                 .addGap(10).addComponent(searchBox))
                         .addComponent(searchResult)
-                        .addGroup(layout.createSequentialGroup()
-                                .addGroup(layout.createSequentialGroup().addComponent(addButton)
-                                        .addComponent(deleteButton).addComponent(favoriteButton)
-                                        .addComponent(lockButton))
-                                .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED,
-                                        GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addGroup(layout.createSequentialGroup().addComponent(saveButton)
-                                        .addComponent(reloadButton)))
-                        .addComponent(viewportScroll));
+                        .addGroup(Alignment.TRAILING,
+                                layout.createSequentialGroup().addComponent(addButton)
+                                        .addComponent(bombButton).addComponent(saveButton)
+                                        .addComponent(reloadButton))
+                        .addComponent(dictionaryViewport).addGroup(Alignment.CENTER,
+                                layout.createSequentialGroup().addComponent(previousButton)
+                                        .addGap(0, 0, Short.MAX_VALUE).addComponent(pageText)
+                                        .addGap(0, 0, Short.MAX_VALUE).addComponent(nextButton)));
 
-        layout.linkSize(addButton, deleteButton, favoriteButton, lockButton, reloadButton,
-                saveButton);
+        layout.linkSize(addButton, bombButton, bombButton, reloadButton, saveButton);
         outerPane.add(pane);
     }
 
@@ -204,8 +201,57 @@ public final class ViewFrame implements Overrideable, Translatable {
             query(searchBox.getText());
         });
 
-        backButton.addActionListener(e -> {
-            MainFrame.getInstance().back();
+        // Rename button replaces the "database name field" with a textbox, and the rename
+        // button with a confirm button.
+        rename.addActionListener(e -> {
+            final var layout = (GroupLayout) pane.getLayout();
+            layout.replace(rename, renameConfirm);
+            layout.replace(databaseName, databaseNameField);
+            databaseNameField.setText(databaseName.getText());
+            databaseNameField.requestFocus();
+        });
+        databaseNameField.getDocument().addDocumentListener((DocumentChangeListener) e -> {
+            renameConfirm.setEnabled(!databaseNameField.getText().isBlank());
+        });
+        renameConfirm.addActionListener(e -> {
+            final var layout = (GroupLayout) pane.getLayout();
+            layout.replace(renameConfirm, rename);
+            layout.replace(databaseNameField, databaseName);
+            Dictionary.getInstance().rename(databaseNameField.getText());
+            updateTranslations();
+        });
+
+        bombButton.addActionListener(e -> {
+            final var res =
+                    Dialogs.confirm("file.bomb.confirm", Dictionary.getInstance().getName());
+            if (res != JOptionPane.YES_OPTION)
+                return;
+
+            new BombFeature().run();
+            query("");
+        });
+        saveButton.addActionListener(e -> {
+            new SaveFeature().run();
+            if (Dictionary.getInstance().getFile() != null)
+                Dialogs.info("file.save", Dictionary.getInstance().getName());
+        });
+        reloadButton.addActionListener(e -> {
+            new ReloadFeature().run();
+            if (Dictionary.getInstance().getFile() != null)
+                Dialogs.info("file.reload", Dictionary.getInstance().getName());
+            repaint();
+        });
+        backButton.addActionListener(e -> MainFrame.getInstance().back());
+
+        nextButton.addActionListener(e -> {
+            page = (int) Math.min(page + 1, Math.round(Math.ceil(displayedWords.size() / 5.0)));
+            repaint();
+            updateTranslations();
+        });
+        previousButton.addActionListener(e -> {
+            page = Math.max(page - 1, 0);
+            repaint();
+            updateTranslations();
         });
     }
 
@@ -219,6 +265,7 @@ public final class ViewFrame implements Overrideable, Translatable {
     @Override
     public JPanel getOverridingPane() {
         updateTranslations();
+        repaint();
         return outerPane;
     }
 
@@ -228,9 +275,12 @@ public final class ViewFrame implements Overrideable, Translatable {
         usingLabel.setText(I18n.tl("view.using"));
         databaseName.setText(Dictionary.getInstance().getName());
         rename.setText(I18n.tl("view.rename"));
+        renameConfirm.setText(I18n.tl("view.rename.confirm"));
 
         searchLabel.setText(I18n.tl("view.search"));
         searchResult.setText(I18n.tl("view.searchResult", queryCount, queryTime));
+        pageText.setText(
+                I18n.tl("view.page", page + 1, Math.round(Math.ceil(displayedWords.size() / 5.0))));
     }
 
 }

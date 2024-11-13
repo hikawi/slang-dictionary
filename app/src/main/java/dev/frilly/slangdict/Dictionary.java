@@ -10,8 +10,12 @@ import java.io.FileOutputStream;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * The singleton instance holding the dictionary database.
@@ -23,6 +27,7 @@ public final class Dictionary {
     private String name;
     private File file;
     private Map<String, Word> words = new HashMap<>();
+    private final Map<String, Set<String>> definitionIndex = new HashMap<>();
 
     private Dictionary() {}
 
@@ -49,6 +54,13 @@ public final class Dictionary {
     }
 
     /**
+     * Nukes all entries of this dictionary.
+     */
+    public void bomb() {
+        words.clear();
+    }
+
+    /**
      * Renames the current dictionary instance.
      * 
      * @param name The name.
@@ -64,6 +76,35 @@ public final class Dictionary {
      */
     public void setFile(final File file) {
         this.file = file;
+    }
+
+    /**
+     * Retrieves the file instance.
+     * 
+     * @return The file.
+     */
+    public File getFile() {
+        return file;
+    }
+
+    /**
+     * Attempts to query the entry list.
+     * 
+     * @param query The query
+     * @return The queried results
+     */
+    public List<String> query(final String query) {
+        final var q = query.toLowerCase();
+        Set<String> matchedWords = new HashSet<>();
+
+        // Check for direct matches in wordMap
+        words.keySet().stream().filter(word -> word.contains(q)).forEach(matchedWords::add);
+
+        // Check for matches in definitionIndex
+        definitionIndex.entrySet().stream().filter(entry -> entry.getKey().contains(q))
+                .flatMap(entry -> entry.getValue().stream()).forEach(matchedWords::add);
+
+        return matchedWords.stream().sorted().toList();
     }
 
     /**
@@ -97,6 +138,17 @@ public final class Dictionary {
             // No errors happened.
             words.clear();
             words.putAll(tempDict);
+            for (var entry : words.entrySet()) {
+                String word = entry.getKey().toLowerCase();
+
+                // Build inverted index for each word in the definitions
+                for (String definition : entry.getValue().definition) {
+                    for (String term : definition.toLowerCase().split("\\s+")) {
+                        definitionIndex.computeIfAbsent(term, k -> ConcurrentHashMap.newKeySet())
+                                .add(word);
+                    }
+                }
+            }
         } catch (Exception e) {
             e.printStackTrace();
             Dialogs.error("file.load.error", file.getName());
@@ -120,7 +172,7 @@ public final class Dictionary {
      * dictionary.
      */
     public void loadDefaults(boolean is100k) {
-        final var file = is100k ? "/slang-100k.txt" : "/slang.txt";
+        final var file = is100k ? "/slang_100k.txt" : "/slang.txt";
         words.clear();
 
         try {

@@ -1,5 +1,7 @@
 package dev.frilly.slangdict.model;
 
+import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Dimension;
 import javax.swing.BorderFactory;
 import javax.swing.GroupLayout;
@@ -10,14 +12,20 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
 import dev.frilly.slangdict.Application;
+import dev.frilly.slangdict.I18n;
 import dev.frilly.slangdict.Word;
+import dev.frilly.slangdict.interfaces.Translatable;
 
 /**
  * The renderer for a cell pane for a word in the dictionary, for really immersive view.
  */
-public class DictionaryCellRenderer extends JPanel {
+public class DictionaryCellRenderer extends JPanel implements Translatable {
 
     private Word word;
+
+    private final JPanel emptyPanel = new JPanel();
+    private final JLabel emptyText = new JLabel();
+    private final JPanel panel = new JPanel();
 
     private final JButton favoriteButton = new JButton();
     private final JButton lockButton = new JButton();
@@ -34,6 +42,8 @@ public class DictionaryCellRenderer extends JPanel {
 
     public DictionaryCellRenderer() {
         this.setup();
+        this.setupActions();
+        I18n.register(this);
     }
 
     /**
@@ -50,12 +60,23 @@ public class DictionaryCellRenderer extends JPanel {
      * Updates this component to properly represent the word.
      */
     public void update() {
-        if (this.word == null)
+        remove(emptyPanel);
+        remove(panel);
+
+        if (this.word == null) {
+            add(emptyPanel);
+            revalidate();
+            repaint();
             return;
-        this.wordLabel.setText(word.word);
-        this.definition.setText(String.join("\n", word.definition));
+        }
+
+        add(panel);
+        wordLabel.setText(word.word);
+        definition.setText(String.join("\n", word.definition));
         setFavorite(word.favorite);
         setLocked(word.locked);
+        revalidate();
+        repaint();
     }
 
     private ImageIcon getIcon(final String key, final int width, final int height) {
@@ -63,18 +84,29 @@ public class DictionaryCellRenderer extends JPanel {
     }
 
     private void setFavorite(final boolean val) {
-        favoriteButton.setIcon(val ? filledStarIcon : starIcon);
+        if (word != null) {
+            word.favorite = val;
+            favoriteButton.setIcon(val ? filledStarIcon : starIcon);
+        }
     }
 
     private void setLocked(final boolean val) {
-        lockButton.setIcon(val ? lockIcon : lockOpenIcon);
-        editButton.setEnabled(!val);
+        if (word != null) {
+            word.locked = val;
+            lockButton.setIcon(val ? lockIcon : lockOpenIcon);
+            editButton.setEnabled(!val);
+        }
     }
 
     private void setup() {
-        final var layout = new GroupLayout(this);
-        setLayout(layout);
-        setBorder(BorderFactory.createEmptyBorder(8, 16, 8, 16));
+        final var layout = new GroupLayout(panel);
+        panel.setLayout(layout);
+        panel.setBorder(BorderFactory.createEmptyBorder(8, 16, 8, 16));
+        setBorder(BorderFactory.createLineBorder(Color.GRAY, 2));
+        setLayout(new BorderLayout());
+
+        emptyPanel.setLayout(new BorderLayout());
+        emptyPanel.add(emptyText, BorderLayout.CENTER);
 
         definition.setLineWrap(true);
         definition.setWrapStyleWord(true);
@@ -96,7 +128,7 @@ public class DictionaryCellRenderer extends JPanel {
                         .addComponent(favoriteButton).addComponent(lockButton))
                 .addGap(8)
                 .addGroup(layout.createParallelGroup(Alignment.LEADING, true)
-                        .addComponent(wordLabel).addComponent(definition))
+                        .addComponent(wordLabel).addGap(4).addComponent(definition))
                 .addGap(8).addGroup(layout.createSequentialGroup().addComponent(editButton)
                         .addComponent(deleteButton)));
 
@@ -109,6 +141,23 @@ public class DictionaryCellRenderer extends JPanel {
                         .addComponent(deleteButton)));
 
         setPreferredSize(new Dimension(600, 100));
+    }
+
+    private void setupActions() {
+        favoriteButton.addActionListener(e -> {
+            if (word != null)
+                setFavorite(!word.favorite);
+        });
+
+        lockButton.addActionListener(e -> {
+            if (word != null)
+                setLocked(!word.locked);
+        });
+    }
+
+    @Override
+    public void updateTranslations() {
+        emptyText.setText(I18n.tl("view.empty"));
     }
 
 }
