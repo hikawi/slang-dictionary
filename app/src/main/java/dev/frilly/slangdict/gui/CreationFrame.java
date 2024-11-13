@@ -4,14 +4,16 @@ import java.awt.Dimension;
 import java.awt.GridLayout;
 
 import javax.swing.BorderFactory;
+import javax.swing.ButtonGroup;
 import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
 import javax.swing.JButton;
-import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 import javax.swing.JTextField;
 
+import dev.frilly.slangdict.Application;
 import dev.frilly.slangdict.I18n;
 import dev.frilly.slangdict.features.file.NewDatabaseFeature;
 import dev.frilly.slangdict.interfaces.Overrideable;
@@ -25,26 +27,20 @@ public final class CreationFrame implements Translatable, Overrideable {
 
     private static CreationFrame instance;
 
-    private final JPanel outerPane;
-    private final JPanel pane;
+    private final JPanel outerPane = new JPanel();
+    private final JPanel pane = new JPanel();
 
-    private final JLabel title;
-    private final JLabel name;
-    private final JTextField field;
-    private final JCheckBox bootstrap;
-    private final JButton cancel;
-    private final JButton create;
+    private final JLabel title = new JLabel();
+    private final JLabel name = new JLabel();
+    private final JTextField field = new JTextField("My Database");
+
+    private final JRadioButton bootstrapDefault = new JRadioButton();
+    private final JRadioButton bootstrap100k = new JRadioButton();
+    private final JButton cancel = new JButton();
+    private final JButton create = new JButton();
 
     private CreationFrame() {
-        outerPane = new JPanel();
-        pane = new JPanel();
-        name = new JLabel(I18n.tl("file.new.name"));
-        title = new JLabel(I18n.tl("file.new"));
-        field = new JTextField();
-        bootstrap = new JCheckBox(I18n.tl("file.new.bootstrap"));
-        cancel = new JButton(I18n.tl("button.cancel"));
-        create = new JButton(I18n.tl("button.create"));
-
+        this.updateTranslations();
         this.setup();
         this.setupActions();
         I18n.register(this);
@@ -57,13 +53,18 @@ public final class CreationFrame implements Translatable, Overrideable {
         final var layout = new GroupLayout(pane);
         pane.setLayout(layout);
 
+        final var buttonGroup = new ButtonGroup();
+        buttonGroup.add(bootstrap100k);
+        buttonGroup.add(bootstrapDefault);
+
         layout.setHorizontalGroup(layout.createParallelGroup(Alignment.LEADING)
                 .addComponent(title)
                 .addGroup(layout.createSequentialGroup()
                         .addComponent(name)
                         .addGap(8, 12, 16)
                         .addComponent(field))
-                .addComponent(bootstrap)
+                .addComponent(bootstrapDefault)
+                .addComponent(bootstrap100k)
                 .addGroup(Alignment.TRAILING, layout.createSequentialGroup()
                         .addComponent(cancel)
                         .addComponent(create)));
@@ -74,13 +75,16 @@ public final class CreationFrame implements Translatable, Overrideable {
                         .addComponent(name)
                         .addComponent(field))
                 .addGap(6, 8, 10)
-                .addComponent(bootstrap)
+                .addComponent(bootstrapDefault)
+                .addComponent(bootstrap100k)
                 .addGap(16, 20, 24)
                 .addGroup(layout.createParallelGroup(Alignment.TRAILING)
                         .addComponent(cancel)
                         .addComponent(create)));
 
         title.putClientProperty("FlatLaf.styleClass", "h2");
+        cancel.setIcon(Application.getIcon(getClass().getResource("/icons/close.png"), 16, 16));
+        create.setIcon(Application.getIcon(getClass().getResource("/icons/library-add.png"), 16, 16));
         field.setPreferredSize(new Dimension(400, 24));
         outerPane.add(pane);
     }
@@ -89,13 +93,13 @@ public final class CreationFrame implements Translatable, Overrideable {
         field.getDocument().addDocumentListener((DocumentChangeListener) e -> {
             create.setEnabled(!field.getText().isBlank());
         });
-        field.setText("My Database");
 
         cancel.addActionListener(e -> {
             MainFrame.getInstance().back();
         });
         create.addActionListener(e -> {
-            new NewDatabaseFeature(field.getText(), bootstrap.isSelected()).run();
+            final var bootstrap = bootstrap100k.isSelected() ? 2 : bootstrapDefault.isSelected() ? 1 : 0;
+            new NewDatabaseFeature(field.getText(), bootstrap).run();
         });
     }
 
@@ -108,7 +112,8 @@ public final class CreationFrame implements Translatable, Overrideable {
     public void updateTranslations() {
         name.setText(I18n.tl("file.new.name"));
         title.setText(I18n.tl("file.new"));
-        bootstrap.setText(I18n.tl("file.new.bootstrap"));
+        bootstrapDefault.setText(I18n.tl("file.new.bootstrap"));
+        bootstrap100k.setText(I18n.tl("file.new.100k"));
         cancel.setText(I18n.tl("button.cancel"));
         create.setText(I18n.tl("button.create"));
     }

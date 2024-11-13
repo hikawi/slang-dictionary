@@ -105,10 +105,21 @@ public final class Dictionary {
      * from the normally saved dictionary.
      */
     public void loadDefaults() {
+        loadDefaults(false);
+    }
+
+    /**
+     * Loads the defaults dictionary.
+     * 
+     * The defaults slang.txt in the .jar file has a different format
+     * from the normally saved dictionary.
+     */
+    public void loadDefaults(boolean is100k) {
+        final var file = is100k ? "/slang-100k.txt" : "/slang.txt";
         words.clear();
 
         try {
-            final var input = new BufferedInputStream(getClass().getResourceAsStream("/slang.txt"));
+            final var input = new BufferedInputStream(getClass().getResourceAsStream(file));
             if (input == null)
                 throw new RuntimeException("No resource found");
 
@@ -126,7 +137,7 @@ public final class Dictionary {
             scanner.close();
         } catch (Exception e) {
             e.printStackTrace();
-            Dialogs.error("file.load.error", "slang.txt");
+            Dialogs.error("file.load.error", file);
         }
     }
 

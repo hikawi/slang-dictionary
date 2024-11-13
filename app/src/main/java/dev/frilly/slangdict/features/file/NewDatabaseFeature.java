@@ -15,15 +15,16 @@ import dev.frilly.slangdict.gui.ViewFrame;
 public final class NewDatabaseFeature implements Runnable {
 
     private final String name;
-    private final boolean bootstrap;
+    private final int bootstrap;
 
     /**
      * Creates an instance of the feature with the specified params.
      * 
      * @param name      The name of the new database.
-     * @param bootstrap Whether to bootstrap with defaults.
+     * @param bootstrap Whether to bootstrap with defaults. 0 = no bootstrap, 1 =
+     *                  default, 2 = 100k random.
      */
-    public NewDatabaseFeature(final String name, final boolean bootstrap) {
+    public NewDatabaseFeature(final String name, final int bootstrap) {
         this.name = name;
         this.bootstrap = bootstrap;
     }
@@ -55,9 +56,9 @@ public final class NewDatabaseFeature implements Runnable {
                 Dictionary.getInstance().rename(name);
 
                 // Loading defaults to the dictionary.
-                if (bootstrap) {
+                if (bootstrap != 0) {
                     ProgressFrame.getInstance().setMessage(I18n.tl("file.new.progress.bootstrap"));
-                    Dictionary.getInstance().loadDefaults();
+                    Dictionary.getInstance().loadDefaults(bootstrap == 2);
                 }
 
                 // Trigger saving the dictionary.

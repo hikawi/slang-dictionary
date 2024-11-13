@@ -21,6 +21,15 @@ import dev.frilly.slangdict.gui.WelcomeFrame;
 public final class Application {
 
     /**
+     * Retrieves the version string of this app.
+     * 
+     * @return The version.
+     */
+    public static String getVersion() {
+        return "2.0";
+    }
+
+    /**
      * Shortcut to call the getMenuShortcutKeyMaskEx() from default toolkit.
      * 
      * @return The int code.

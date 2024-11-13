@@ -3,9 +3,7 @@ package dev.frilly.slangdict.model;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArrayList;
-
 import javax.swing.table.AbstractTableModel;
-
 import dev.frilly.slangdict.Dictionary;
 import dev.frilly.slangdict.I18n;
 
@@ -32,11 +30,10 @@ public final class DictionaryViewModel extends AbstractTableModel {
             Dictionary.getInstance().getWords().entrySet().parallelStream()
                     .filter(e -> e.getKey().toLowerCase().contains(query.toLowerCase())
                             || e.getValue().definition.toLowerCase().contains(query.toLowerCase()))
-                    .map(e -> e.getKey())
-                    .sorted()
-                    .forEach(displayedWords::add);
+                    .map(e -> e.getKey()).sorted().forEach(displayedWords::add);
             fireTableDataChanged();
-            return new QueryResult(displayedWords.size(), (System.currentTimeMillis() - start) / 1000.0);
+            return new QueryResult(displayedWords.size(),
+                    (System.currentTimeMillis() - start) / 1000.0);
         });
     }
 
@@ -51,6 +48,7 @@ public final class DictionaryViewModel extends AbstractTableModel {
 
     @Override
     public int getRowCount() {
+        fireTableStructureChanged();
         return displayedWords.size();
     }
 

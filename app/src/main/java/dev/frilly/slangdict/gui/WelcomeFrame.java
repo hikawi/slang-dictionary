@@ -1,10 +1,11 @@
 package dev.frilly.slangdict.gui;
 
+import java.awt.Dimension;
 import java.awt.GridBagLayout;
-import java.awt.Insets;
 
 import javax.swing.BorderFactory;
 import javax.swing.GroupLayout;
+import javax.swing.GroupLayout.Alignment;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -24,87 +25,105 @@ public final class WelcomeFrame implements Translatable, Overrideable {
 
     private static WelcomeFrame instance;
 
-    private final JPanel overarch;
+    private final JPanel outerPane = new JPanel(new GridBagLayout());
+    private final JPanel panel = new JPanel();
 
-    private final JPanel panel;
-    private final GroupLayout layout;
+    private final JLabel bookIcon = new JLabel(
+            Application.getIcon(getClass().getResource("/images/book.png"), 64, 64));
+    private final JLabel programName = new JLabel(I18n.tl("welcome.programName"));
+    private final JLabel versionName = new JLabel(I18n.tl("welcome.version", Application.getVersion()));
 
-    private final JLabel welcomeText;
-    private final JButton newDatabase;
-    private final JButton openDatabase;
-    private final JButton quit;
+    private final JButton newDatabase = new JButton(
+            Application.getIcon(getClass().getResource("/icons/library-add.png"), 32, 32));
+    private final JButton openDatabase = new JButton(
+            Application.getIcon(getClass().getResource("/icons/file-open.png"), 32, 32));
+    private final JButton quitProgram = new JButton(
+            Application.getIcon(getClass().getResource("/icons/exit.png"), 32, 32));
+
+    private final JLabel newDatabaseLabel = new JLabel();
+    private final JLabel openDatabaseLabel = new JLabel();
+    private final JLabel quitProgramLabel = new JLabel();
 
     private WelcomeFrame() {
-        overarch = new JPanel();
-        overarch.setLayout(new GridBagLayout());
-
-        panel = new JPanel();
-        layout = new GroupLayout(panel);
-        panel.setLayout(layout);
-
-        welcomeText = new JLabel(I18n.tl("welcome"));
-        newDatabase = new JButton(I18n.tl("file.new"));
-        openDatabase = new JButton(I18n.tl("file.open"));
-        quit = new JButton(I18n.tl("file.quit"));
-
+        updateTranslations();
         setup();
         setupActions();
         I18n.register(this);
     }
 
     private void setup() {
-        welcomeText.putClientProperty("FlatLaf.styleClass", "h00");
+        final var layout = new GroupLayout(panel);
+        panel.setLayout(layout);
+        panel.setBorder(BorderFactory.createEmptyBorder(32, 32, 32, 32));
         layout.setAutoCreateGaps(true);
         layout.setAutoCreateContainerGaps(true);
-        panel.setBorder(BorderFactory.createEmptyBorder(32, 32, 32, 32));
 
-        final var libraryAddIcon = Application.getIcon(getClass().getResource("/icons/library-add.png"), 16, 16);
-        newDatabase.setIcon(libraryAddIcon);
-        newDatabase.setMargin(new Insets(8, 16, 8, 16));
-
-        final var fileOpenIcon = Application.getIcon(getClass().getResource("/icons/file-open.png"), 16, 16);
-        openDatabase.setIcon(fileOpenIcon);
-
-        final var quitIcon = Application.getIcon(getClass().getResource("/icons/exit.png"), 16, 16);
-        quit.setIcon(quitIcon);
+        programName.putClientProperty("FlatLaf.styleClass", "h1");
+        versionName.putClientProperty("FlatLaf.styleClass", "semibold");
+        newDatabase.setPreferredSize(new Dimension(64, 64));
 
         layout.setVerticalGroup(layout.createSequentialGroup()
-                .addComponent(welcomeText)
-                .addGap(16, 24, 32)
-                .addGroup(layout.createParallelGroup(GroupLayout.Alignment.CENTER)
-                        .addComponent(newDatabase)
-                        .addComponent(openDatabase)
-                        .addComponent(quit)));
+                .addComponent(bookIcon)
+                .addGap(8)
+                .addComponent(programName)
+                .addGap(4)
+                .addComponent(versionName)
+                .addGap(32)
+                .addGroup(layout.createParallelGroup(Alignment.CENTER)
+                        .addGroup(layout.createSequentialGroup()
+                                .addComponent(newDatabase)
+                                .addGap(4)
+                                .addComponent(newDatabaseLabel))
+                        .addGroup(layout.createSequentialGroup()
+                                .addComponent(openDatabase)
+                                .addGap(4)
+                                .addComponent(openDatabaseLabel))
+                        .addGroup(layout.createSequentialGroup()
+                                .addComponent(quitProgram)
+                                .addGap(4)
+                                .addComponent(quitProgramLabel))));
 
-        layout.setHorizontalGroup(layout.createParallelGroup(GroupLayout.Alignment.CENTER)
-                .addComponent(welcomeText)
+        layout.setHorizontalGroup(layout.createParallelGroup(Alignment.CENTER)
+                .addComponent(bookIcon)
+                .addComponent(programName)
+                .addComponent(versionName)
                 .addGroup(layout.createSequentialGroup()
-                        .addComponent(newDatabase)
-                        .addComponent(openDatabase)
-                        .addComponent(quit)));
+                        .addGroup(layout.createParallelGroup(Alignment.CENTER)
+                                .addComponent(newDatabase)
+                                .addComponent(newDatabaseLabel))
+                        .addGap(32)
+                        .addGroup(layout.createParallelGroup(Alignment.CENTER)
+                                .addComponent(openDatabase)
+                                .addComponent(openDatabaseLabel))
+                        .addGap(32)
+                        .addGroup(layout.createParallelGroup(Alignment.CENTER)
+                                .addComponent(quitProgram)
+                                .addComponent(quitProgramLabel))));
 
-        layout.linkSize(SwingConstants.HORIZONTAL, newDatabase, openDatabase, quit);
-        layout.linkSize(SwingConstants.VERTICAL, newDatabase, openDatabase, quit);
-        overarch.add(panel);
+        layout.linkSize(SwingConstants.HORIZONTAL, newDatabase, openDatabase, quitProgram);
+        layout.linkSize(SwingConstants.VERTICAL, newDatabase, openDatabase, quitProgram);
+        outerPane.add(panel);
     }
 
     private void setupActions() {
         newDatabase.addActionListener(e -> MainFrame.getInstance().override(CreationFrame.getInstance()));
         openDatabase.addActionListener(e -> new OpenDatabaseFeature().run());
-        quit.addActionListener(e -> new QuitFeature().run());
+        quitProgram.addActionListener(e -> new QuitFeature().run());
     }
 
     @Override
     public JPanel getOverridingPane() {
-        return overarch;
+        return outerPane;
     }
 
     @Override
     public void updateTranslations() {
-        welcomeText.setText(I18n.tl("welcome"));
-        newDatabase.setText(I18n.tl("file.new"));
-        openDatabase.setText(I18n.tl("file.open"));
-        quit.setText(I18n.tl("file.quit"));
+        programName.setText(I18n.tl("welcome.programName"));
+        versionName.setText(I18n.tl("welcome.version", Application.getVersion()));
+
+        newDatabaseLabel.setText(I18n.tl("welcome.new"));
+        openDatabaseLabel.setText(I18n.tl("welcome.open"));
+        quitProgramLabel.setText(I18n.tl("welcome.quit"));
     }
 
     public static WelcomeFrame getInstance() {
