@@ -1,9 +1,9 @@
 package dev.frilly.slangdict.gui;
 
+import dev.frilly.slangdict.interfaces.Overrideable;
 import java.awt.Dimension;
 import java.awt.GridBagLayout;
 import java.util.concurrent.CompletableFuture;
-
 import javax.swing.BorderFactory;
 import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
@@ -11,8 +11,6 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.Timer;
-
-import dev.frilly.slangdict.interfaces.Overrideable;
 
 /**
  * An implementation for showing the progress bar.
@@ -25,14 +23,23 @@ public final class ProgressFrame implements Overrideable {
 
     private static ProgressFrame instance;
 
+    public static ProgressFrame getInstance() {
+        return switch (instance) {
+            case null -> instance = new ProgressFrame();
+            default -> instance;
+        };
+    }
+
+    // The target progress value to go to, for animating the progress bar.
     private int targetProgress = 0;
 
     // UI Components
     private final JPanel outerPane;
-    private final JPanel pane;
 
+    private final JPanel pane;
     private final JLabel heading;
     private final JProgressBar progressBar;
+
     private final JLabel message;
 
     private final Timer timer;
@@ -50,41 +57,16 @@ public final class ProgressFrame implements Overrideable {
         // For a smooth progress bar.
         timer = new Timer(50, null);
         timer.addActionListener(e -> {
-            if (progressBar.getValue() > targetProgress)
-                progressBar.setValue(progressBar.getValue() - 1);
-            else if (progressBar.getValue() < targetProgress)
-                progressBar.setValue(progressBar.getValue() + 1);
+            if (progressBar.getValue() > targetProgress) progressBar.setValue(progressBar.getValue() - 1);
+            else if (progressBar.getValue() < targetProgress) progressBar.setValue(progressBar.getValue() + 1);
         });
 
         this.setup();
     }
 
-    private void setup() {
-        final var layout = new GroupLayout(pane);
-        pane.setLayout(layout);
-
-        layout.setVerticalGroup(layout.createSequentialGroup()
-                .addComponent(heading)
-                .addGap(20, 28, 36)
-                .addComponent(progressBar)
-                .addGap(4, 6, 8)
-                .addComponent(message));
-        layout.setHorizontalGroup(layout.createParallelGroup(Alignment.LEADING)
-                .addComponent(heading)
-                .addComponent(progressBar)
-                .addComponent(message));
-
-        progressBar.setStringPainted(true);
-        message.setPreferredSize(new Dimension(600, 200));
-
-        heading.putClientProperty("FlatLaf.styleClass", "h2");
-        message.putClientProperty("FlatLaf.styleClass", "large");
-        outerPane.add(pane);
-    }
-
     /**
      * Initializes the progress bar with values.
-     * 
+     *
      * @param heading The heading.
      * @param message The message.
      */
@@ -96,7 +78,7 @@ public final class ProgressFrame implements Overrideable {
 
     /**
      * Sets the heading.
-     * 
+     *
      * @param heading The heading.
      */
     public void setHeading(final String heading) {
@@ -105,7 +87,7 @@ public final class ProgressFrame implements Overrideable {
 
     /**
      * Sets the message.
-     * 
+     *
      * @param message The message.
      */
     public void setMessage(final String message) {
@@ -114,7 +96,7 @@ public final class ProgressFrame implements Overrideable {
 
     /**
      * Sets the progress bar value.
-     * 
+     *
      * @param progress The progress value.
      */
     public void setProgress(final int progress) {
@@ -123,7 +105,7 @@ public final class ProgressFrame implements Overrideable {
 
     /**
      * Sets whether the progress bar is indeterminate.
-     * 
+     *
      * @param state The state
      */
     public void setIndeterminate(final boolean state) {
@@ -132,7 +114,7 @@ public final class ProgressFrame implements Overrideable {
 
     /**
      * Starts a task and displays the progress bar.
-     * 
+     *
      * @param task    The task to start.
      * @param resolve The task to run after it resolves.
      * @param reject  The task to run after it gets cancelled or failed.
@@ -140,14 +122,11 @@ public final class ProgressFrame implements Overrideable {
     public void startTask(final Runnable task, final Runnable resolve, final Runnable reject) {
         MainFrame.getInstance().override(this);
         timer.start();
-        CompletableFuture.runAsync(task)
-                .whenComplete((ret, error) -> {
-                    if (error != null && reject != null)
-                        reject.run();
-                    else if (resolve != null)
-                        resolve.run();
-                    timer.stop();
-                });
+        CompletableFuture.runAsync(task).whenComplete((ret, error) -> {
+            if (error != null && reject != null) reject.run();
+            else if (resolve != null) resolve.run();
+            timer.stop();
+        });
     }
 
     @Override
@@ -155,11 +134,32 @@ public final class ProgressFrame implements Overrideable {
         return outerPane;
     }
 
-    public static ProgressFrame getInstance() {
-        return switch (instance) {
-            case null -> instance = new ProgressFrame();
-            default -> instance;
-        };
-    }
+    private void setup() {
+        final var layout = new GroupLayout(pane);
+        pane.setLayout(layout);
 
+        layout.setVerticalGroup(
+            layout
+                .createSequentialGroup()
+                .addComponent(heading)
+                .addGap(20, 28, 36)
+                .addComponent(progressBar)
+                .addGap(4, 6, 8)
+                .addComponent(message)
+        );
+        layout.setHorizontalGroup(
+            layout
+                .createParallelGroup(Alignment.LEADING)
+                .addComponent(heading)
+                .addComponent(progressBar)
+                .addComponent(message)
+        );
+
+        progressBar.setStringPainted(true);
+        message.setPreferredSize(new Dimension(600, 200));
+
+        heading.putClientProperty("FlatLaf.styleClass", "h2");
+        message.putClientProperty("FlatLaf.styleClass", "large");
+        outerPane.add(pane);
+    }
 }

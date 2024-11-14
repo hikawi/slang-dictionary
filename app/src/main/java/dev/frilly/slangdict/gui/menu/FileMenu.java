@@ -1,74 +1,60 @@
 package dev.frilly.slangdict.gui.menu;
 
+import dev.frilly.slangdict.Application;
+import dev.frilly.slangdict.features.file.BombFeature;
+import dev.frilly.slangdict.features.file.CloseDatabaseFeature;
+import dev.frilly.slangdict.features.file.OpenDatabaseFeature;
+import dev.frilly.slangdict.features.file.QuitFeature;
+import dev.frilly.slangdict.features.file.ResetDatabaseFeature;
+import dev.frilly.slangdict.features.file.SaveFeature;
+import dev.frilly.slangdict.gui.CreationFrame;
+import dev.frilly.slangdict.gui.MainFrame;
 import java.awt.event.KeyEvent;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.KeyStroke;
-import dev.frilly.slangdict.Application;
-import dev.frilly.slangdict.I18n;
-import dev.frilly.slangdict.features.file.BombFeature;
-import dev.frilly.slangdict.features.file.OpenDatabaseFeature;
-import dev.frilly.slangdict.features.file.QuitFeature;
-import dev.frilly.slangdict.features.file.SaveFeature;
-import dev.frilly.slangdict.gui.CreationFrame;
-import dev.frilly.slangdict.gui.MainFrame;
-import dev.frilly.slangdict.interfaces.Translatable;
 
 /**
  * The component menu for the "File" option on the menu bar.
  */
-public final class FileMenu implements Translatable {
+public final class FileMenu {
 
     private static FileMenu instance;
 
-    private final JMenu menu;
+    private final JMenu menu = new JMenu("File");
 
-    private final JMenuItem newDatabase;
-    private final JMenuItem openDatabase;
-    private final JMenuItem renameDatabase;
-    private final JMenuItem saveDatabase;
-    private final JMenuItem duplicateDatabase;
-    private final JMenuItem deleteDatabase;
-    private final JMenuItem resetDatabase;
-    private final JMenuItem bombDatabase;
-    private final JMenuItem quit;
+    private final JMenuItem newDatabase = new JMenuItem("New Database");
+    private final JMenuItem openDatabase = new JMenuItem("Open Database");
+    private final JMenuItem closeDatabase = new JMenuItem("Save Database");
+
+    private final JMenuItem saveDatabase = new JMenuItem("Save Database");
+    private final JMenuItem duplicateDatabase = new JMenuItem("Duplicate Database");
+    private final JMenuItem deleteDatabase = new JMenuItem("Delete Database");
+    private final JMenuItem resetDatabase = new JMenu("Reset Database");
+    private final JMenuItem bombDatabase = new JMenu("Bomb Database");
+    private final JMenuItem quit = new JMenu("Quit");
+
+    private final JMenuItem resetDefault = new JMenuItem("Reset to defaults");
+    private final JMenuItem reset100k = new JMenuItem("Reset to 100k");
 
     private FileMenu() {
-        menu = new JMenu(I18n.tl("bar.file"));
-
-        newDatabase = new JMenuItem(I18n.tl("bar.file.new"));
-        openDatabase = new JMenuItem(I18n.tl("bar.file.open"));
-        renameDatabase = new JMenuItem(I18n.tl("bar.file.rename"));
-        saveDatabase = new JMenuItem(I18n.tl("bar.file.save"));
-        duplicateDatabase = new JMenuItem(I18n.tl("bar.file.duplicate"));
-        deleteDatabase = new JMenuItem(I18n.tl("bar.file.delete"));
-        resetDatabase = new JMenuItem(I18n.tl("bar.file.reset"));
-        bombDatabase = new JMenuItem(I18n.tl("bar.file.bomb"));
-        quit = new JMenuItem(I18n.tl("bar.file.quit"));
-
         this.setup();
-        I18n.register(this);
-    }
-
-    private void setupRenameDatabase() {
-        renameDatabase.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F2, 0));
     }
 
     private void setup() {
-        setupRenameDatabase();
+        closeDatabase.setAccelerator(
+            KeyStroke.getKeyStroke(KeyEvent.VK_W, Application.getMaskedMetaKey() | KeyEvent.SHIFT_DOWN_MASK)
+        );
+        closeDatabase.addActionListener(e -> new CloseDatabaseFeature().run());
 
-        saveDatabase.setAccelerator(
-                KeyStroke.getKeyStroke(KeyEvent.VK_S, Application.getMaskedMetaKey()));
+        saveDatabase.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, Application.getMaskedMetaKey()));
         saveDatabase.addActionListener(e -> new SaveFeature().run());
 
-        newDatabase.setAccelerator(
-                KeyStroke.getKeyStroke(KeyEvent.VK_N, Application.getMaskedMetaKey()));
-        newDatabase.addActionListener(
-                e -> MainFrame.getInstance().override(CreationFrame.getInstance()));
+        newDatabase.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_N, Application.getMaskedMetaKey()));
+        newDatabase.addActionListener(e -> MainFrame.getInstance().override(CreationFrame.getInstance()));
 
-        openDatabase.setAccelerator(
-                KeyStroke.getKeyStroke(KeyEvent.VK_O, Application.getMaskedMetaKey()));
+        openDatabase.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, Application.getMaskedMetaKey()));
         openDatabase.addActionListener(e -> new OpenDatabaseFeature().run());
 
         bombDatabase.addActionListener(e -> {
@@ -77,20 +63,23 @@ public final class FileMenu implements Translatable {
             MainFrame.getInstance().repaint();
         });
 
-        quit.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_W,
-                Application.getMaskedMetaKey() | KeyEvent.SHIFT_DOWN_MASK));
         quit.addActionListener(e -> new QuitFeature().run());
+
+        resetDefault.addActionListener(e -> new ResetDatabaseFeature(false).run());
+        reset100k.addActionListener(e -> new ResetDatabaseFeature(true).run());
 
         menu.add(newDatabase);
         menu.add(openDatabase);
         menu.addSeparator();
 
-        menu.add(renameDatabase);
+        menu.add(closeDatabase);
         menu.add(saveDatabase);
         menu.add(duplicateDatabase);
         menu.add(deleteDatabase);
         menu.addSeparator();
 
+        resetDatabase.add(resetDefault);
+        resetDatabase.add(reset100k);
         menu.add(resetDatabase);
         menu.add(bombDatabase);
         menu.addSeparator();
@@ -100,7 +89,7 @@ public final class FileMenu implements Translatable {
 
     /**
      * Initializes the provided bar with components;
-     * 
+     *
      * @param bar
      */
     public void init(final JMenuBar bar) {
@@ -109,7 +98,7 @@ public final class FileMenu implements Translatable {
 
     /**
      * Retrieves the FileMenu instance.
-     * 
+     *
      * @return the instance
      */
     public static FileMenu getInstance() {
@@ -118,19 +107,4 @@ public final class FileMenu implements Translatable {
             default -> instance;
         };
     }
-
-    @Override
-    public void updateTranslations() {
-        menu.setText(I18n.tl("bar.file"));
-
-        newDatabase.setText(I18n.tl("bar.file.new"));
-        openDatabase.setText(I18n.tl("bar.file.open"));
-        renameDatabase.setText(I18n.tl("bar.file.rename"));
-        saveDatabase.setText(I18n.tl("bar.file.save"));
-        duplicateDatabase.setText(I18n.tl("bar.file.duplicate"));
-        deleteDatabase.setText(I18n.tl("bar.file.delete"));
-        resetDatabase.setText(I18n.tl("bar.file.reset"));
-        quit.setText(I18n.tl("bar.file.quit"));
-    }
-
 }

@@ -8,16 +8,13 @@ import javax.swing.event.DocumentListener;
  */
 @FunctionalInterface
 public interface DocumentChangeListener extends DocumentListener {
-
     /**
      * Fires anytime when this document changes.
      */
     public void onChange(final DocumentEvent e);
 
     @Override
-    default void changedUpdate(DocumentEvent e) {
-        onChange(e);
-    }
+    default void changedUpdate(DocumentEvent e) {}
 
     @Override
     default void insertUpdate(DocumentEvent e) {
@@ -28,5 +25,4 @@ public interface DocumentChangeListener extends DocumentListener {
     default void removeUpdate(DocumentEvent e) {
         onChange(e);
     }
-
 }

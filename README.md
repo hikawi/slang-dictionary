@@ -33,11 +33,13 @@ This project focuses more on IO, OOP, Generics and Collections.
 - [x] Must utilize Java IO, OOP, and Collections. The application can use Console, Swing or Java FX.
 - [x] Must have a menu to pick an option, regardless of UI choices.
 - [x] Must load data from files into objects.
-- [x] Must have a search time under 1s for 100.000 words, even though the provided default file doesn't have that many.
+- [ ] Must have a search time under 1s for 100.000 words, even though the provided default file doesn't have that many. (Because of custom pane paints, a query involving 100,000 words exceeds 1s by 0.5s?)
 - [x] Must save the current data after modifications.
 - [x] Must use a version control system, with at least 10 commits spread across multiple days.
 
-### Features
+## Features
+
+### Required
 
 **Required feature list**:
 
@@ -50,9 +52,17 @@ This project focuses more on IO, OOP, Generics and Collections.
 - [x] Reset back to default list.
 - [ ] Randomly select a word and display it as the "Word of the Day".
 
-**Bonus feature list**
+### All
 
-- `Instant Find`: As you type in the search input, the word list is instantly filtered by what you type. This seems pretty fast because of Java's Streams API.
-- `Internationalization`: There's a language change button, where the effect is taken immediately.
-- `Favorite Words`: Favorite a word so it will always appear before non-favorite words.
-- `View Filter`: You can choose the checkbox "Show Only Favorites" will prune all non-favorite words from showing in the table.
+#### Databases
+
+This application uses multiple databases, so you can effectively have multiple types of dictionaries, maybe one for English slangs, one for German slangs and one for Russian slangs. Only one database is loaded and viewed at one time to prevent loading too many entries into the memory, as the entire dictionary loads in memory.
+
+| Feature       | Name                                                                                                | Action                                                                                                                                                                                                       |
+| ------------- | --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `file.open`   | Open Database                                                                                       | Open an existing database, usually under the name `<uuid>.dict`.                                                                                                                                             |
+| `file.new`    | Create Database                                                                                     | Create a new database bound to a file, with options to _bootstrap_ the database with default values, like the 7,000 slang words dictionary or the randomly generated 100,000 entries dictionary for testing. |
+| `file.close`  | Close Database                                                                                      | Close the database after asking if the user wants to save any changes.                                                                                                                                       |
+| `file.reload` | Reload Database                                                                                     | Drop all changes and reload the database from the file, if it still exists.                                                                                                                                  |
+| `file.save`   | Save Database                                                                                       | Save all changes done to the currently opened database.                                                                                                                                                      |
+| `file.bomb`   | Bomb Database } Nuke all entries on the database. To save this change, use the `file.save` feature. |

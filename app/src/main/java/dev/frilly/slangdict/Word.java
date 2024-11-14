@@ -9,8 +9,7 @@ import java.util.List;
 public class Word {
 
     public String word = "null";
-    public List<String> definition = new ArrayList<>();
+    public String definition = "null";
     public boolean locked = false;
     public boolean favorite = false;
-
 }
