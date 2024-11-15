@@ -1,5 +1,7 @@
 package dev.frilly.slangdict;
 
+import dev.frilly.slangdict.features.search.SortFavoritesFeature;
+
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
@@ -24,7 +26,8 @@ public final class Dictionary {
     private File file;
     private Map<String, Word> words = new HashMap<>();
 
-    private Dictionary() {}
+    private Dictionary() {
+    }
 
     /**
      * Gets the name of the current dictionary.
@@ -46,6 +49,33 @@ public final class Dictionary {
 
     public Word getWord(final String key) {
         return this.words.get(key.toLowerCase());
+    }
+
+    /**
+     * Edits the word to a new word.
+     *
+     * @param word    The word to match.
+     * @param newWord The new word.
+     * @return The word if it was changed, or null.
+     */
+    public Word editWord(final String word, final String newWord) {
+        final var wordObj = getWord(word);
+        if (wordObj == null)
+            return null;
+
+        wordObj.word = newWord;
+        words.remove(word.toLowerCase());
+        words.put(newWord.toLowerCase(), wordObj);
+        return wordObj;
+    }
+
+    /**
+     * Deletes a word.
+     *
+     * @param word The word.
+     */
+    public void deleteWord(final String word) {
+        words.remove(word.toLowerCase());
     }
 
     /**
@@ -95,7 +125,17 @@ public final class Dictionary {
             .entrySet()
             .stream()
             .filter(e -> e.getKey().contains(q) || e.getValue().definition.toLowerCase().contains(q))
-            .map(e -> e.getKey());
+            .filter(e -> SortFavoritesFeature.CURRENT != SortFavoritesFeature.HIDDEN || !e.getValue().favorite)
+            .filter(e -> SortFavoritesFeature.CURRENT != SortFavoritesFeature.ONLY || e.getValue().favorite)
+            .sorted((e1, e2) -> {
+                final var comp = SortFavoritesFeature.TOP_COMPARATOR;
+                if (SortFavoritesFeature.CURRENT == SortFavoritesFeature.TOP)
+                    return comp.compare(e1.getValue(), e2.getValue());
+                else if (SortFavoritesFeature.CURRENT == SortFavoritesFeature.BOTTOM)
+                    return comp.reversed().compare(e1.getValue(), e2.getValue());
+                else return e1.getKey().compareTo(e2.getKey());
+            })
+            .map(Map.Entry::getKey);
     }
 
     /**
@@ -131,7 +171,7 @@ public final class Dictionary {
 
     /**
      * Loads the defaults dictionary.
-     *
+     * <p>
      * The defaults slang.txt in the .jar file has a different format from the
      * normally saved
      * dictionary.
@@ -142,7 +182,7 @@ public final class Dictionary {
 
     /**
      * Loads the defaults dictionary.
-     *
+     * <p>
      * The defaults slang.txt in the .jar file has a different format from the
      * normally saved
      * dictionary.

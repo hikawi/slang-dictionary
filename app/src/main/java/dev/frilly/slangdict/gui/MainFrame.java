@@ -2,6 +2,7 @@ package dev.frilly.slangdict.gui;
 
 import dev.frilly.slangdict.gui.menu.MainBar;
 import dev.frilly.slangdict.interfaces.Overrideable;
+
 import java.awt.event.WindowEvent;
 import java.io.IOException;
 import java.util.Stack;
@@ -20,25 +21,27 @@ public final class MainFrame extends JFrame {
 
     private MainFrame() {
         super("Slang Dictionary");
+
+        System.out.println("MainFrame constructor");
         this.stack = new Stack<>();
         this.setup();
     }
 
     private void setup() {
+        System.out.println("MainFrame setup");
         MainBar.getInstance().init(this);
 
         try {
-            final var img = ImageIO.read(
-                getClass().getResourceAsStream("/images/book.png")
-            );
+            final var img = ImageIO.read(getClass().getResourceAsStream("/images/book.png"));
             this.setIconImage(img);
-        } catch (final IOException e) {}
+        } catch (final IOException e) {
+        }
     }
 
     /**
      * Create the frame.
      */
-    public final void start() {
+    public void start() {
         this.pack();
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.setLocationRelativeTo(null);
@@ -103,9 +106,8 @@ public final class MainFrame extends JFrame {
      * @return The frame.
      */
     public static MainFrame getInstance() {
-        return switch (instance) {
-            case null -> instance = new MainFrame();
-            default -> instance;
-        };
+        if (instance == null) instance = new MainFrame();
+        return instance;
     }
+
 }

@@ -34,7 +34,6 @@ public final class SearchMenu implements Translatable {
         instantMatch = new JCheckBoxMenuItem(I18n.tl("bar.search.instantMatch"));
 
         this.setup();
-        I18n.register(this);
     }
 
     private void setup() {
@@ -42,6 +41,7 @@ public final class SearchMenu implements Translatable {
     }
 
     public void init(final JMenuBar bar) {
+        System.out.println("SearchMenu init");
         bar.add(menu);
     }
 

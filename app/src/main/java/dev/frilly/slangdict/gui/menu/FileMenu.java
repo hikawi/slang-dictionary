@@ -9,6 +9,7 @@ import dev.frilly.slangdict.features.file.ResetDatabaseFeature;
 import dev.frilly.slangdict.features.file.SaveFeature;
 import dev.frilly.slangdict.gui.CreationFrame;
 import dev.frilly.slangdict.gui.MainFrame;
+
 import java.awt.event.KeyEvent;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
@@ -26,23 +27,44 @@ public final class FileMenu {
 
     private final JMenuItem newDatabase = new JMenuItem("New Database");
     private final JMenuItem openDatabase = new JMenuItem("Open Database");
-    private final JMenuItem closeDatabase = new JMenuItem("Save Database");
+    private final JMenuItem closeDatabase = new JMenuItem("Close Database");
 
     private final JMenuItem saveDatabase = new JMenuItem("Save Database");
     private final JMenuItem duplicateDatabase = new JMenuItem("Duplicate Database");
     private final JMenuItem deleteDatabase = new JMenuItem("Delete Database");
-    private final JMenuItem resetDatabase = new JMenu("Reset Database");
-    private final JMenuItem bombDatabase = new JMenu("Bomb Database");
-    private final JMenuItem quit = new JMenu("Quit");
+    private final JMenu resetDatabase = new JMenu("Reset Database");
+    private final JMenuItem bombDatabase = new JMenuItem("Bomb Database");
+    private final JMenuItem quit = new JMenuItem("Quit");
 
     private final JMenuItem resetDefault = new JMenuItem("Reset to defaults");
     private final JMenuItem reset100k = new JMenuItem("Reset to 100k");
 
     private FileMenu() {
         this.setup();
+        this.setupActions();
     }
 
     private void setup() {
+        menu.add(newDatabase);
+        menu.add(openDatabase);
+        menu.add(closeDatabase);
+        menu.addSeparator();
+
+        menu.add(saveDatabase);
+        menu.add(duplicateDatabase);
+        menu.add(deleteDatabase);
+        menu.addSeparator();
+
+        resetDatabase.add(resetDefault);
+        resetDatabase.add(reset100k);
+        menu.add(resetDatabase);
+        menu.add(bombDatabase);
+        menu.addSeparator();
+
+        menu.add(quit);
+    }
+
+    private void setupActions() {
         closeDatabase.setAccelerator(
             KeyStroke.getKeyStroke(KeyEvent.VK_W, Application.getMaskedMetaKey() | KeyEvent.SHIFT_DOWN_MASK)
         );
@@ -63,36 +85,20 @@ public final class FileMenu {
             MainFrame.getInstance().repaint();
         });
 
+        quit.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Q, Application.getMaskedMetaKey()));
         quit.addActionListener(e -> new QuitFeature().run());
 
         resetDefault.addActionListener(e -> new ResetDatabaseFeature(false).run());
         reset100k.addActionListener(e -> new ResetDatabaseFeature(true).run());
-
-        menu.add(newDatabase);
-        menu.add(openDatabase);
-        menu.addSeparator();
-
-        menu.add(closeDatabase);
-        menu.add(saveDatabase);
-        menu.add(duplicateDatabase);
-        menu.add(deleteDatabase);
-        menu.addSeparator();
-
-        resetDatabase.add(resetDefault);
-        resetDatabase.add(reset100k);
-        menu.add(resetDatabase);
-        menu.add(bombDatabase);
-        menu.addSeparator();
-
-        menu.add(quit);
     }
 
     /**
      * Initializes the provided bar with components;
      *
-     * @param bar
+     * @param bar The bar to add to.
      */
     public void init(final JMenuBar bar) {
+        System.out.println("FileMenu init");
         bar.add(menu);
     }
 
@@ -102,9 +108,7 @@ public final class FileMenu {
      * @return the instance
      */
     public static FileMenu getInstance() {
-        return switch (instance) {
-            case null -> instance = new FileMenu();
-            default -> instance;
-        };
+        return instance == null ? instance = new FileMenu() : instance;
     }
+
 }

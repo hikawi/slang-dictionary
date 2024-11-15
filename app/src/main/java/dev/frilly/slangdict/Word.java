@@ -1,8 +1,5 @@
 package dev.frilly.slangdict;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * A data class for the "word" object.
  */

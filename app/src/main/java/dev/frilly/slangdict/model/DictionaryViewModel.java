@@ -2,7 +2,11 @@ package dev.frilly.slangdict.model;
 
 import dev.frilly.slangdict.Dictionary;
 import dev.frilly.slangdict.I18n;
+import dev.frilly.slangdict.gui.ViewFrame;
 import dev.frilly.slangdict.interfaces.Translatable;
+
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -11,27 +15,22 @@ import javax.swing.table.AbstractTableModel;
 /**
  * The model that holds the data to display in the View Frame.
  */
-public final class DictionaryViewModel
-    extends AbstractTableModel
-    implements Translatable {
+public final class DictionaryViewModel extends AbstractTableModel {
 
     /**
      * The record to show how much time was taken and how many queries returned.
      */
-    public record QueryResult(int count, double time) {}
+    public record QueryResult(int count, double time) {
+    }
 
-    private final String[] columnNames = new String[] {
-        I18n.tl("view.word"),
-        I18n.tl("view.definition"),
-        I18n.tl("view.favorite"),
-        I18n.tl("view.locked"),
+    private final String[] columnNames = new String[]{
+        "Word", "Definition", "Favorite", "Locked"
     };
 
     public DictionaryViewModel() {
-        I18n.register(this);
     }
 
-    private final List<String> displayedWords = new CopyOnWriteArrayList<>();
+    private final List<String> displayedWords = Collections.synchronizedList(new ArrayList<>());
 
     /**
      * Apply a query and return the query result after finishing.
@@ -44,7 +43,7 @@ public final class DictionaryViewModel
             return System.currentTimeMillis() - start;
         }).thenApply(time -> {
             fireTableDataChanged();
-            return new QueryResult(displayedWords.size(), time);
+            return new QueryResult(displayedWords.size(), time / 1000.0);
         });
     }
 
@@ -86,11 +85,27 @@ public final class DictionaryViewModel
     }
 
     @Override
-    public void updateTranslations() {
-        columnNames[0] = I18n.tl("view.word");
-        columnNames[1] = I18n.tl("view.definition");
-        columnNames[2] = I18n.tl("view.favorite");
-        columnNames[3] = I18n.tl("view.locked");
-        fireTableStructureChanged();
+    public boolean isCellEditable(int rowIndex, int columnIndex) {
+        return true;
     }
+
+    @Override
+    public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
+        final var word = Dictionary.getInstance().getWord(displayedWords.get(rowIndex));
+        switch (columnIndex) {
+            case 0:
+                Dictionary.getInstance().editWord(word.word, (String) aValue);
+                break;
+            case 2:
+                word.favorite = (boolean) aValue;
+                break;
+            case 3:
+                word.locked = (boolean) aValue;
+                break;
+        }
+
+        // Re-query to make sure stuff gets sorted.
+        fireTableRowsUpdated(rowIndex, rowIndex);
+    }
+
 }

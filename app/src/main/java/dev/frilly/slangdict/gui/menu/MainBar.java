@@ -19,12 +19,13 @@ public final class MainBar {
      * @param frame The frame to add to.
      */
     public void init(final JFrame frame) {
+        System.out.println("MainBar init");
         final var menuBar = new JMenuBar();
 
         FileMenu.getInstance().init(menuBar);
         EditMenu.getInstance().init(menuBar);
         ViewMenu.getInstance().init(menuBar);
-        SearchMenu.getInstance().init(menuBar);
+//        SearchMenu.getInstance().init(menuBar);
 
         frame.setJMenuBar(menuBar);
     }
@@ -35,10 +36,7 @@ public final class MainBar {
      * @return The main menu bar.
      */
     public static MainBar getInstance() {
-        return switch (instance) {
-            case null -> instance = new MainBar();
-            default -> instance;
-        };
+        return instance == null ? instance = new MainBar() : instance;
     }
 
 }

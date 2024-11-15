@@ -22,7 +22,7 @@ public final class Application {
 
     /**
      * Retrieves the version string of this app.
-     * 
+     *
      * @return The version.
      */
     public static String getVersion() {
@@ -31,7 +31,7 @@ public final class Application {
 
     /**
      * Shortcut to call the getMenuShortcutKeyMaskEx() from default toolkit.
-     * 
+     *
      * @return The int code.
      */
     public static int getMaskedMetaKey() {
@@ -40,7 +40,7 @@ public final class Application {
 
     /**
      * Retrieves a scaled version of the icon on the classpath.
-     * 
+     *
      * @param url    The load url.
      * @param width  The width to scale to.
      * @param height The height to scale to.
@@ -67,13 +67,15 @@ public final class Application {
         System.setProperty("apple.awt.application.name", "Slang Dictionary");
         System.setProperty("apple.awt.application.appearance", "system");
 
+        System.out.println("Is EDT: " + SwingUtilities.isEventDispatchThread());
+
         // Start the program.
         SwingUtilities.invokeLater(() -> {
             FlatDarkFlatIJTheme.setup();
 
             final var frame = MainFrame.getInstance();
             frame.start();
-            MainFrame.getInstance().override(WelcomeFrame.getInstance());
+            frame.override(WelcomeFrame.getInstance());
         });
     }
 
