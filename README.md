@@ -33,15 +33,13 @@ This project focuses more on IO, OOP, Generics and Collections.
 - [x] Must utilize Java IO, OOP, and Collections. The application can use Console, Swing or Java FX.
 - [x] Must have a menu to pick an option, regardless of UI choices.
 - [x] Must load data from files into objects.
-- [ ] Must have a search time under 1s for 100.000 words, even though the provided default file doesn't have that many. (Because of custom pane paints, a query involving 100,000 words exceeds 1s by 0.5s?)
+- [x] Must have a search time under 1s for 100.000 words, even though the provided default file doesn't have that many.
 - [x] Must save the current data after modifications.
 - [x] Must use a version control system, with at least 10 commits spread across multiple days.
 
 ## Features
 
-### Required
-
-**Required feature list**:
+### Required Features
 
 - [x] Find by the word.
 - [x] Find by the definition.
@@ -52,7 +50,7 @@ This project focuses more on IO, OOP, Generics and Collections.
 - [x] Reset back to default list.
 - [x] Randomly select a word and display it as the "Word of the Day".
 
-### All
+### All Features
 
 #### Databases
 
@@ -66,3 +64,18 @@ This application uses multiple databases, so you can effectively have multiple t
 | `file.reload` | Reload Database | Drop all changes and reload the database from the file, if it still exists.                                                                                                                                  |
 | `file.save`   | Save Database   | Save all changes done to the currently opened database.                                                                                                                                                      |
 | `file.bomb`   | Bomb Database   | Nuke all entries on the database. To save this change, use the `file.save` feature.                                                                                                                          |
+| `file.reset`  | Reset Database  | Reset the database back into default entries.                                                                                                                                                                |
+| `file.rename` | Rename Database | Rename the database, but the file name shouldn't be changed.                                                                                                                                                 |
+
+#### Editing
+
+#### Searching
+
+This application provides multiple ways to customize your searches.
+
+| Feature          | Name           | Action                                                                                                                                |
+|------------------|----------------|---------------------------------------------------------------------------------------------------------------------------------------|
+| `search.sort`    | Sort Favorites | Ability to sort favorite words to top, to bottom, hidden, only show favorites or in an ordinary order with other words.               |
+| `search.instant` | Instant Search | Ability to search as you type using Swing Workers.                                                                                    |
+| `search.match`   | Match Searches | Ability to pick whether the search should match against words or definitions, or casings or uses the search text as a regex.          |
+| `search.random`  | Random Word    | See the word of the day, and ability to request a new word. Ability to see a certain message if there is nothing within the database. |

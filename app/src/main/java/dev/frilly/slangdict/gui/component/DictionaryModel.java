@@ -2,6 +2,8 @@ package dev.frilly.slangdict.gui.component;
 
 import dev.frilly.slangdict.Dictionary;
 import dev.frilly.slangdict.Word;
+import dev.frilly.slangdict.features.search.QueryFeature;
+import dev.frilly.slangdict.features.search.SortFavoritesFeature;
 
 import javax.swing.*;
 import javax.swing.table.AbstractTableModel;
@@ -16,10 +18,22 @@ public final class DictionaryModel extends AbstractTableModel {
 
     private final List<Word> query = Collections.synchronizedList(new ArrayList<>());
     private final JLabel queryResult;
+    private final JCheckBox matchWord;
+    private final JCheckBox matchDefinition;
+    private final JCheckBox matchCase;
+    private final JCheckBox matchRegex;
+    private final JComboBox<String> comboBox;
+
     private SwingWorker<Void, Void> worker;
 
-    public DictionaryModel(final JLabel queryResult) {
+    public DictionaryModel(final JLabel queryResult, final JCheckBox matchWord, final JCheckBox matchDefinition,
+                           final JCheckBox matchCase, final JCheckBox matchRegex, final JComboBox<String> comboBox) {
         this.queryResult = queryResult;
+        this.matchWord = matchWord;
+        this.matchDefinition = matchDefinition;
+        this.matchCase = matchCase;
+        this.matchRegex = matchRegex;
+        this.comboBox = comboBox;
     }
 
     /**
@@ -38,7 +52,11 @@ public final class DictionaryModel extends AbstractTableModel {
             protected Void doInBackground() throws Exception {
                 time = System.currentTimeMillis();
                 query.clear();
-                Dictionary.getInstance().query(q).forEach(query::add);
+
+                final var s = new QueryFeature(q, matchWord.isSelected(), matchDefinition.isSelected(), matchCase.isSelected(),
+                    matchRegex.isSelected()).get();
+                final var sel = comboBox.getSelectedIndex();
+                new SortFavoritesFeature(sel).apply(s).forEach(query::add);
                 return null;
             }
 
@@ -71,7 +89,7 @@ public final class DictionaryModel extends AbstractTableModel {
 
     @Override
     public Class<?> getColumnClass(int columnIndex) {
-        return switch(columnIndex) {
+        return switch (columnIndex) {
             case 0, 1 -> String.class;
             case 2, 3 -> Boolean.class;
             default -> Object.class;

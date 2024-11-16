@@ -8,6 +8,6 @@ import javax.swing.JPanel;
  */
 public interface Overrideable {
 
-    public JPanel getOverridingPane();
+    JPanel getOverridingPane();
 
 }

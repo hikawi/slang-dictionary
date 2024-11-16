@@ -1,7 +1,9 @@
 package dev.frilly.slangdict.features.file;
 
+import dev.frilly.slangdict.Dialogs;
 import dev.frilly.slangdict.Dictionary;
-import dev.frilly.slangdict.gui.ViewFrame;
+
+import javax.swing.*;
 
 /**
  * Implementation for the Reload Feature.
@@ -12,8 +14,10 @@ public final class ReloadFeature implements Runnable {
 
     @Override
     public void run() {
-        Dictionary.getInstance().load();
-//        ViewFrame.getInstance().query();
+        final var opt = Dialogs.confirm("This will drop all changes and reload the data from disk for this database. Are you sure");
+        if(opt == JOptionPane.YES_OPTION) {
+            Dictionary.getInstance().load();
+        }
     }
 
 }

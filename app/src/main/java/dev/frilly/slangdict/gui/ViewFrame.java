@@ -1,11 +1,15 @@
 package dev.frilly.slangdict.gui;
 
 import dev.frilly.slangdict.Application;
+import dev.frilly.slangdict.Dialogs;
 import dev.frilly.slangdict.Dictionary;
 import dev.frilly.slangdict.features.file.CloseDatabaseFeature;
+import dev.frilly.slangdict.features.file.ReloadFeature;
+import dev.frilly.slangdict.features.file.ResetDatabaseFeature;
 import dev.frilly.slangdict.gui.component.DictionaryModel;
 import dev.frilly.slangdict.gui.component.RandomWordPanel;
 import dev.frilly.slangdict.interfaces.Overrideable;
+import dev.frilly.slangdict.listener.DocumentChangeListener;
 
 import javax.swing.*;
 import java.awt.*;
@@ -43,6 +47,14 @@ public final class ViewFrame implements Overrideable {
     private final JLabel queryResult = new JLabel("Queried 0 results in 0s.");
     private final JButton historyButton = new JButton("History");
 
+    private final JCheckBox instantSearch = new JCheckBox("Instant Search");
+    private final JCheckBox matchWord = new JCheckBox("Match Word", true);
+    private final JCheckBox matchDefinition = new JCheckBox("Match Definition", true);
+    private final JCheckBox matchCase = new JCheckBox("Match Case");
+    private final JCheckBox matchRegex = new JCheckBox("Match Regex");
+
+    private final JComboBox<String> sortingOptions = new JComboBox<>();
+
     // The fourth section, that shows editorial buttons.
     private final JButton addButton = new JButton();
     private final JButton editButton = new JButton();
@@ -57,7 +69,7 @@ public final class ViewFrame implements Overrideable {
     private final JButton bombButton = new JButton();
 
     // The fifth section, that shows some dictionary entries.
-    private final DictionaryModel model = new DictionaryModel(queryResult);
+    private final DictionaryModel model = new DictionaryModel(queryResult, matchWord, matchDefinition, matchCase, matchRegex, sortingOptions);
     private final JTable table = new JTable(model);
     private final JScrollPane tableScrollPane = new JScrollPane(table);
 
@@ -79,6 +91,8 @@ public final class ViewFrame implements Overrideable {
         l.setAutoCreateGaps(true);
         l.setAutoCreateContainerGaps(true);
 
+        // Lol this is getting big and ridiculous.
+
         l.setHorizontalGroup(l.createParallelGroup(GroupLayout.Alignment.LEADING)
             .addComponent(backButton)
             .addGroup(l.createSequentialGroup()
@@ -89,10 +103,23 @@ public final class ViewFrame implements Overrideable {
                 .addComponent(renameButton))
             .addGroup(l.createSequentialGroup()
                 .addComponent(search)
-                .addComponent(searchField)
-                .addComponent(historyButton))
+                .addGroup(l.createParallelGroup(GroupLayout.Alignment.LEADING)
+                    .addComponent(searchField)
+                    .addGroup(l.createSequentialGroup()
+                        .addGroup(l.createParallelGroup()
+                            .addComponent(matchWord)
+                            .addComponent(matchCase))
+                        .addGroup(l.createParallelGroup()
+                            .addComponent(matchDefinition)
+                            .addComponent(matchRegex))
+                        .addComponent(instantSearch)))
+                .addGroup(l.createParallelGroup(GroupLayout.Alignment.LEADING)
+                    .addComponent(historyButton)))
             .addComponent(queryResult)
             .addComponent(randomWordPanel)
+            .addGroup(l.createSequentialGroup()
+                .addGap(0, 0, Short.MAX_VALUE)
+                .addComponent(sortingOptions))
             .addGroup(GroupLayout.Alignment.CENTER, l.createSequentialGroup()
                 .addComponent(addButton)
                 .addComponent(editButton)
@@ -106,6 +133,7 @@ public final class ViewFrame implements Overrideable {
                 .addComponent(reloadButton)
                 .addComponent(bombButton))
             .addComponent(tableScrollPane));
+
         l.setVerticalGroup(l.createSequentialGroup()
             .addComponent(backButton)
             .addGap(16, 20, 24)
@@ -120,11 +148,24 @@ public final class ViewFrame implements Overrideable {
                 .addComponent(search)
                 .addComponent(searchField)
                 .addComponent(historyButton))
+            .addGroup(l.createBaselineGroup(true, true)
+                .addGroup(l.createSequentialGroup()
+                    .addComponent(matchWord)
+                    .addComponent(matchCase))
+                .addGroup(l.createSequentialGroup()
+                    .addComponent(matchDefinition)
+                    .addComponent(matchRegex))
+                .addComponent(instantSearch))
             .addGap(4, 6, 8)
-            .addComponent(queryResult)
+            .addGroup(l.createBaselineGroup(true, false)
+                .addComponent(queryResult)
+                .addComponent(instantSearch))
             .addGap(12, 14, 16)
             .addComponent(randomWordPanel)
             .addGap(24, 28, 32)
+            .addGroup(l.createBaselineGroup(true, false)
+                .addGap(0, 0, Short.MAX_VALUE)
+                .addComponent(sortingOptions))
             .addGroup(l.createBaselineGroup(true, false)
                 .addComponent(addButton)
                 .addComponent(editButton)
@@ -147,6 +188,15 @@ public final class ViewFrame implements Overrideable {
         table.getColumnModel().getColumn(2).setPreferredWidth(100);
         table.getColumnModel().getColumn(3).setPreferredWidth(100);
 
+        final var comboModel = new DefaultComboBoxModel<String>();
+        comboModel.addElement("Favorites up top");
+        comboModel.addElement("Favorites down bottom");
+        comboModel.addElement("Favorites hidden");
+        comboModel.addElement("Favorites only");
+        comboModel.addElement("Favorites unsorted");
+        sortingOptions.setModel(comboModel);
+        sortingOptions.setPreferredSize(new Dimension(200, 20));
+
         l.linkSize(addButton, editButton, removeButton, starButton, unstarButton, lockButton, unlockButton, reloadButton, resetButton, bombButton);
     }
 
@@ -162,8 +212,8 @@ public final class ViewFrame implements Overrideable {
         lockButton.setIcon(Application.getIcon("/icons/lock.png", 24, 24));
         unlockButton.setIcon(Application.getIcon("/icons/lock-open.png", 24, 24));
 
-        reloadButton.setIcon(Application.getIcon("/icons/sync.png", 24, 24));
-        resetButton.setIcon(Application.getIcon("/icons/reset.png", 24, 24));
+        reloadButton.setIcon(Application.getIcon("/icons/load-file.png", 24, 24));
+        resetButton.setIcon(Application.getIcon("/icons/sync.png", 24, 24));
         bombButton.setIcon(Application.getIcon("/icons/bomb.png", 24, 24));
     }
 
@@ -172,7 +222,15 @@ public final class ViewFrame implements Overrideable {
         backButton.addActionListener(e -> new CloseDatabaseFeature().run());
 
         // Search function.
+        searchField.getDocument().addDocumentListener((DocumentChangeListener) e -> {
+            if (!instantSearch.isSelected())
+                return;
+            model.query(searchField.getText(), () -> {
+            });
+        });
         searchField.addActionListener(e -> {
+            if (instantSearch.isSelected())
+                return;
             searchField.setEnabled(false);
             model.query(searchField.getText(), () -> searchField.setEnabled(true));
         });
@@ -204,6 +262,17 @@ public final class ViewFrame implements Overrideable {
             l.replace(cancelRenameButton, rigidBox);
         });
 
+        // Editorial actions.
+        addButton.addActionListener(e -> {
+            MainFrame.getInstance().override(AddingFrame.getInstance());
+        });
+        reloadButton.addActionListener(e -> {
+            new ReloadFeature().run();
+            Dialogs.info("Reloaded database from disk.");
+            model.query(searchField.getText(), () -> {});
+        });
+        resetButton.addActionListener(e -> new ResetDatabaseFeature().run());
+
         // Setup table selection.
         table.getSelectionModel().addListSelectionListener(e -> {
             if (e.getValueIsAdjusting()) return;
@@ -211,7 +280,16 @@ public final class ViewFrame implements Overrideable {
             final var s = Arrays.stream(table.getSelectedRows())
                 .mapToObj(i -> (String) model.getValueAt(i, 0))
                 .map(Dictionary.getInstance()::getWord)
-                .filter(Objects::nonNull);
+                .filter(Objects::nonNull)
+                .toList();
+
+            editButton.setEnabled(s.stream().noneMatch(w -> w.locked));
+            removeButton.setEnabled(s.stream().noneMatch(w -> w.favorite));
+        });
+
+        // Combo box should update immediately.
+        sortingOptions.addActionListener(e -> {
+            model.query(searchField.getText(), () -> {});
         });
     }
 
@@ -226,8 +304,7 @@ public final class ViewFrame implements Overrideable {
     public JPanel getOverridingPane() {
         if (!searchField.getText().isEmpty())
             searchField.setText("");
-        model.query("", () -> {
-        });
+        model.query("", () -> {});
         randomWordPanel.randomize();
         update();
         return panel;

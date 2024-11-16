@@ -1,10 +1,7 @@
 package dev.frilly.slangdict;
 
-import dev.frilly.slangdict.features.search.SortFavoritesFeature;
-
 import java.io.*;
 import java.util.*;
-import java.util.stream.Stream;
 
 /**
  * The singleton instance holding the dictionary database.
@@ -109,31 +106,6 @@ public final class Dictionary {
     public void setFile(final File file) {
         this.file = file;
         if (file == null) words.clear();
-    }
-
-    /**
-     * Attempts to query the entry list.
-     *
-     * @param query The query
-     * @return The queried results as a stream.
-     */
-    public Stream<Word> query(final String query) {
-        final var q = query.toLowerCase();
-        return words
-            .entrySet()
-            .stream()
-            .filter(e -> e.getKey().contains(q) || e.getValue().definition.toLowerCase().contains(q))
-            .filter(e -> SortFavoritesFeature.CURRENT != SortFavoritesFeature.HIDDEN || !e.getValue().favorite)
-            .filter(e -> SortFavoritesFeature.CURRENT != SortFavoritesFeature.ONLY || e.getValue().favorite)
-            .sorted((e1, e2) -> {
-                final var comp = SortFavoritesFeature.TOP_COMPARATOR;
-                if (SortFavoritesFeature.CURRENT == SortFavoritesFeature.TOP)
-                    return comp.compare(e1.getValue(), e2.getValue());
-                else if (SortFavoritesFeature.CURRENT == SortFavoritesFeature.BOTTOM)
-                    return comp.reversed().compare(e1.getValue(), e2.getValue());
-                else return e1.getKey().compareTo(e2.getKey());
-            })
-            .map(Map.Entry::getValue);
     }
 
     /**
