@@ -2,18 +2,18 @@ package dev.frilly.slangdict.gui;
 
 import dev.frilly.slangdict.Application;
 import dev.frilly.slangdict.Dictionary;
+import dev.frilly.slangdict.Word;
 import dev.frilly.slangdict.features.edit.AddWordFeature;
+import dev.frilly.slangdict.features.edit.EditWordFeature;
 import dev.frilly.slangdict.interfaces.Overrideable;
 
 import javax.swing.*;
 import java.awt.*;
 
-/**
- * The frame for adding a new word to a dictionary.
- */
-public final class AddingFrame implements Overrideable {
+@SuppressWarnings("DuplicatedCode")
+public class EditingFrame implements Overrideable {
 
-    private static AddingFrame instance;
+    private static EditingFrame instance;
     private final JPanel panel = new JPanel();
 
     private final JLabel addingToLabel = new JLabel();
@@ -22,19 +22,18 @@ public final class AddingFrame implements Overrideable {
     private final JLabel definitionLabel = new JLabel("Definition");
     private final JTextArea definitionTextArea = new JTextArea();
 
-    private final JCheckBox favoriteCheckBox = new JCheckBox("Favorite");
-    private final JCheckBox lockCheckBox = new JCheckBox("Lock");
-
     private final JButton confirmButton = new JButton("Confirm");
     private final JButton cancelButton = new JButton("Cancel");
 
-    private AddingFrame() {
+    private Word word = null;
+
+    private EditingFrame() {
         setup();
         setupActions();
     }
 
-    public static AddingFrame getInstance() {
-        return instance == null ? instance = new AddingFrame() : instance;
+    public static EditingFrame getInstance() {
+        return instance == null ? instance = new EditingFrame() : instance;
     }
 
     private void setup() {
@@ -53,11 +52,6 @@ public final class AddingFrame implements Overrideable {
         definitionTextArea.setWrapStyleWord(true);
         definitionTextArea.setLineWrap(true);
 
-        favoriteCheckBox.setIcon(Application.getIcon("/icons/star.png", 20, 20));
-        lockCheckBox.setIcon(Application.getIcon("/icons/lock-open.png", 20, 20));
-        favoriteCheckBox.setSelectedIcon(Application.getIcon("/icons/star-filled.png", 20, 20));
-        lockCheckBox.setSelectedIcon(Application.getIcon("/icons/lock.png", 20, 20));
-
         l.setVerticalGroup(l.createSequentialGroup()
             .addComponent(addingToLabel)
             .addGap(24, 28, 32)
@@ -68,10 +62,6 @@ public final class AddingFrame implements Overrideable {
             .addComponent(definitionLabel)
             .addGap(4, 6, 8)
             .addComponent(definitionTextArea)
-            .addGap(12, 16, 20)
-            .addComponent(favoriteCheckBox)
-            .addGap(4, 6, 8)
-            .addComponent(lockCheckBox)
             .addGap(24, 28, 32)
             .addGroup(l.createParallelGroup()
                 .addComponent(cancelButton)
@@ -83,8 +73,6 @@ public final class AddingFrame implements Overrideable {
             .addComponent(wordField)
             .addComponent(definitionLabel)
             .addComponent(definitionTextArea)
-            .addComponent(favoriteCheckBox)
-            .addComponent(lockCheckBox)
             .addGroup(GroupLayout.Alignment.TRAILING, l.createSequentialGroup()
                 .addComponent(cancelButton)
                 .addComponent(confirmButton)));
@@ -93,20 +81,30 @@ public final class AddingFrame implements Overrideable {
         l.linkSize(SwingConstants.HORIZONTAL, confirmButton, cancelButton);
     }
 
+    /**
+     * Sets the word related for the edit option.
+     *
+     * @param word the word object.
+     */
+    public void setWord(Word word) {
+        this.word = word;
+    }
+
     private void setupActions() {
         cancelButton.addActionListener(e -> MainFrame.getInstance().back());
-        confirmButton.addActionListener(e ->
-            new AddWordFeature(wordField.getText(), definitionTextArea.getText(), favoriteCheckBox.isSelected(), lockCheckBox.isSelected()).run()
-        );
+        confirmButton.addActionListener(e -> new EditWordFeature(word.word, wordField.getText(), definitionTextArea.getText()).run());
     }
 
     @Override
     public JPanel getOverridingPane() {
-        addingToLabel.setText("Adding to \"%s\"...".formatted(Dictionary.getInstance().getName()));
-        wordField.setText("");
-        definitionTextArea.setText("");
-        favoriteCheckBox.setSelected(false);
-        lockCheckBox.setSelected(false);
+        addingToLabel.setText("Editing word in \"%s\"...".formatted(Dictionary.getInstance().getName()));
+        if(word != null) {
+            wordField.setText(word.word);
+            definitionTextArea.setText(word.definition);
+        } else {
+            wordField.setText("");
+            definitionTextArea.setText("");
+        }
         return panel;
     }
 

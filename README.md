@@ -12,7 +12,8 @@
 
 Main takeaways of this project are:
 
-- Ability to establish, manage, and work in a team. (This doesn't work since he changed it to a solo project instead with how few students there are)
+- Ability to establish, manage, and work in a team. (This doesn't work since he changed it to a solo project instead
+  with how few students there are)
 - Ability to analyze and write technical documentation for an application.
 - Ability to understand and use basic native Java data structures.
 - Ability to write basic syntax in Java.
@@ -21,7 +22,8 @@ Main takeaways of this project are:
 - Ability to manage and handle Exceptions.
 - Ability to manage a project structure.
 - Ability to analyze the given prompt.
-- Ability to separate the given required tasks into smaller actions, and finding the appropriate Java classes to implement.
+- Ability to separate the given required tasks into smaller actions, and finding the appropriate Java classes to
+  implement.
 - Ability to work with an IDE. Recommendations: IntellIJ IDEA, Eclipse, NetBeans.
 
 ## Description
@@ -44,9 +46,9 @@ This project focuses more on IO, OOP, Generics and Collections.
 - [x] Find by the word.
 - [x] Find by the definition.
 - [ ] View search history.
-- [ ] Add a new word. Notify if duplicated, and allow overwriting or adding new.
+- [x] Add a new word. Notify if duplicated, and allow overwriting or adding new.
 - [x] Edit a word.
-- [ ] Delete a word, with confirmation.
+- [x] Delete a word, with confirmation.
 - [x] Reset back to default list.
 - [x] Randomly select a word and display it as the "Word of the Day".
 
@@ -54,7 +56,9 @@ This project focuses more on IO, OOP, Generics and Collections.
 
 #### Databases
 
-This application uses multiple databases, so you can effectively have multiple types of dictionaries, maybe one for English slangs, one for German slangs and one for Russian slangs. Only one database is loaded and viewed at one time to prevent loading too many entries into the memory, as the entire dictionary loads in memory.
+This application uses multiple databases, so you can effectively have multiple types of dictionaries, maybe one for
+English slangs, one for German slangs and one for Russian slangs. Only one database is loaded and viewed at one time to
+prevent loading too many entries into the memory, as the entire dictionary loads in memory.
 
 | Feature       | Name            | Action                                                                                                                                                                                                       |
 |---------------|-----------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -68,6 +72,18 @@ This application uses multiple databases, so you can effectively have multiple t
 | `file.rename` | Rename Database | Rename the database, but the file name shouldn't be changed.                                                                                                                                                 |
 
 #### Editing
+
+This section provides actions to manipulate the dictionary.
+
+| Feature       | Name              | Action                                                                                 |
+|---------------|-------------------|----------------------------------------------------------------------------------------|
+| `edit.add`    | Add a word        | Appends a new entry into the dictionary.                                               |
+| `edit.edit`   | Edit a word       | Edits an entry's word or definition.                                                   |
+| `edit.star`   | Favorite a word   | Marks a word as favorite and prevents its deletion. You can mark multiple at once.     |
+| `edit.unstar` | Unfavorite a word | Unmarks a word from faovirte and allows its deletion. You can unmark multiple at once. |
+| `edit.lock`   | Lock a word       | Locks a word and prevents it from edits. You can lock multiple at once.                |
+| `edit.unlock` | Unlock a word     | Unlocks a word and allows it to be edited. You can unlock multiple at once.            |
+| `edit.remove` | Remove a word     | Deletes a word from the dictionary.                                                    |
 
 #### Searching
 

@@ -17,6 +17,7 @@ public final class ReloadFeature implements Runnable {
         final var opt = Dialogs.confirm("This will drop all changes and reload the data from disk for this database. Are you sure");
         if(opt == JOptionPane.YES_OPTION) {
             Dictionary.getInstance().load();
+            Dialogs.info("Reloaded data from disk.");
         }
     }
 

@@ -3,6 +3,9 @@ package dev.frilly.slangdict.gui;
 import dev.frilly.slangdict.Application;
 import dev.frilly.slangdict.Dialogs;
 import dev.frilly.slangdict.Dictionary;
+import dev.frilly.slangdict.features.edit.LockWordFeature;
+import dev.frilly.slangdict.features.edit.StarWordFeature;
+import dev.frilly.slangdict.features.file.BombFeature;
 import dev.frilly.slangdict.features.file.CloseDatabaseFeature;
 import dev.frilly.slangdict.features.file.ReloadFeature;
 import dev.frilly.slangdict.features.file.ResetDatabaseFeature;
@@ -92,7 +95,6 @@ public final class ViewFrame implements Overrideable {
         l.setAutoCreateContainerGaps(true);
 
         // Lol this is getting big and ridiculous.
-
         l.setHorizontalGroup(l.createParallelGroup(GroupLayout.Alignment.LEADING)
             .addComponent(backButton)
             .addGroup(l.createSequentialGroup()
@@ -124,8 +126,8 @@ public final class ViewFrame implements Overrideable {
                 .addComponent(addButton)
                 .addComponent(editButton)
                 .addComponent(removeButton)
-                .addComponent(starButton)
                 .addComponent(unstarButton)
+                .addComponent(starButton)
                 .addComponent(lockButton)
                 .addComponent(unlockButton)
                 .addGap(0, 0, Short.MAX_VALUE)
@@ -170,8 +172,8 @@ public final class ViewFrame implements Overrideable {
                 .addComponent(addButton)
                 .addComponent(editButton)
                 .addComponent(removeButton)
-                .addComponent(starButton)
                 .addComponent(unstarButton)
+                .addComponent(starButton)
                 .addComponent(lockButton)
                 .addComponent(unlockButton)
                 .addGap(0, 0, Short.MAX_VALUE)
@@ -207,8 +209,8 @@ public final class ViewFrame implements Overrideable {
         addButton.setIcon(Application.getIcon("/icons/add.png", 24, 24));
         editButton.setIcon(Application.getIcon("/icons/edit.png", 24, 24));
         removeButton.setIcon(Application.getIcon("/icons/remove.png", 24, 24));
-        starButton.setIcon(Application.getIcon("/icons/star.png", 24, 24));
-        unstarButton.setIcon(Application.getIcon("/icons/star-filled.png", 24, 24));
+        starButton.setIcon(Application.getIcon("/icons/star-filled.png", 24, 24));
+        unstarButton.setIcon(Application.getIcon("/icons/star.png", 24, 24));
         lockButton.setIcon(Application.getIcon("/icons/lock.png", 24, 24));
         unlockButton.setIcon(Application.getIcon("/icons/lock-open.png", 24, 24));
 
@@ -266,12 +268,73 @@ public final class ViewFrame implements Overrideable {
         addButton.addActionListener(e -> {
             MainFrame.getInstance().override(AddingFrame.getInstance());
         });
+        editButton.addActionListener(e -> {
+            final var v = (String) table.getValueAt(table.getSelectedRow(), 0);
+            final var w = Dictionary.getInstance().getWord(v);
+
+            if(w.locked) {
+                Dialogs.error("You can't edit a locked word.");
+                return;
+            }
+
+            EditingFrame.getInstance().setWord(w);
+            MainFrame.getInstance().override(EditingFrame.getInstance());
+        });
+        removeButton.addActionListener(e -> {
+            final var choices = Arrays.stream(table.getSelectedRows())
+                .mapToObj(i -> (String) table.getValueAt(i, 0))
+                .toList();
+
+            if(choices.isEmpty()) {
+                Dialogs.error("You have to select a row first to delete!");
+                return;
+            }
+
+            DeletingFrame.getInstance().setSelectedWords(choices);
+            MainFrame.getInstance().override(DeletingFrame.getInstance());
+        });
+        lockButton.addActionListener(e -> {
+            final var choices = Arrays.stream(table.getSelectedRows())
+                .mapToObj(i -> (String) table.getValueAt(i, 0))
+                .toList();
+            new LockWordFeature(choices, true).run();
+            model.fireTableDataChanged();
+            table.clearSelection();
+        });
+        unlockButton.addActionListener(e -> {
+            final var choices = Arrays.stream(table.getSelectedRows())
+                .mapToObj(i -> (String) table.getValueAt(i, 0))
+                .toList();
+            new LockWordFeature(choices, false).run();
+            model.fireTableDataChanged();
+            table.clearSelection();
+        });
+        starButton.addActionListener(e -> {
+            final var choices = Arrays.stream(table.getSelectedRows())
+                .mapToObj(i -> (String) table.getValueAt(i, 0))
+                .toList();
+            new StarWordFeature(choices, true).run();
+            model.query(searchField.getText());
+            table.clearSelection();
+        });
+        unstarButton.addActionListener(e -> {
+            final var choices = Arrays.stream(table.getSelectedRows())
+                .mapToObj(i -> (String) table.getValueAt(i, 0))
+                .toList();
+            new StarWordFeature(choices, false).run();
+            model.query(searchField.getText());
+            table.clearSelection();
+        });
+
         reloadButton.addActionListener(e -> {
             new ReloadFeature().run();
-            Dialogs.info("Reloaded database from disk.");
-            model.query(searchField.getText(), () -> {});
+            model.query(searchField.getText());
         });
         resetButton.addActionListener(e -> new ResetDatabaseFeature().run());
+        bombButton.addActionListener(e -> {
+            new BombFeature().run();
+            model.query(searchField.getText());
+        });
 
         // Setup table selection.
         table.getSelectionModel().addListSelectionListener(e -> {
@@ -289,7 +352,7 @@ public final class ViewFrame implements Overrideable {
 
         // Combo box should update immediately.
         sortingOptions.addActionListener(e -> {
-            model.query(searchField.getText(), () -> {});
+            model.query(searchField.getText());
         });
     }
 
@@ -304,7 +367,7 @@ public final class ViewFrame implements Overrideable {
     public JPanel getOverridingPane() {
         if (!searchField.getText().isEmpty())
             searchField.setText("");
-        model.query("", () -> {});
+        model.query("");
         randomWordPanel.randomize();
         update();
         return panel;

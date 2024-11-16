@@ -36,6 +36,10 @@ public final class DictionaryModel extends AbstractTableModel {
         this.comboBox = comboBox;
     }
 
+    public void query(final String q) {
+        query(q, () -> {});
+    }
+
     /**
      * Applies a query and fires table data changed.
      *

@@ -65,6 +65,15 @@ public final class Dictionary {
     }
 
     /**
+     * Adds a new word. This does not check if the word already exists.
+     *
+     * @param word The word to add.
+     */
+    public void addWord(final Word word) {
+        words.put(word.word.toLowerCase(), word);
+    }
+
+    /**
      * Deletes a word.
      *
      * @param word The word.
