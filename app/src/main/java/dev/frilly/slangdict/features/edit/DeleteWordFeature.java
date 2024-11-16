@@ -1,7 +1,8 @@
 package dev.frilly.slangdict.features.edit;
 
 import dev.frilly.slangdict.Dialogs;
-import dev.frilly.slangdict.Dictionary;
+import dev.frilly.slangdict.gui.DeletingFrame;
+import dev.frilly.slangdict.gui.MainFrame;
 import dev.frilly.slangdict.gui.ViewFrame;
 
 import javax.swing.*;
@@ -18,17 +19,20 @@ public final class DeleteWordFeature implements Runnable {
 
     @Override
     public void run() {
-        final var words = ViewFrame.getInstance().getSelectedWords().toList();
+//        final var words = ViewFrame.getInstance().getSelectedWords().toList();
+//
+//        // Can't delete favorites
+//        if (words.stream().anyMatch(w -> w.favorite)) {
+//            Dialogs.error("You can't delete favorite words. Deselect them before deleting.");
+//            return;
+//        }
+//
+//        if(words.isEmpty()) {
+//            Dialogs.error("You can't delete nothing...");
+//            return;
+//        }
 
-        // Can't delete favorites
-        if (words.stream().anyMatch(w -> w.favorite)) {
-            Dialogs.error("You can't delete favorite words. Deselect them before deleting.");
-            return;
-        }
-
-        words.stream().map(w -> w.word).forEach(Dictionary.getInstance()::deleteWord);
-        ViewFrame.getInstance().query();
-        Dialogs.info("Deleted %d word%s.", words.size(), words.size() != 1 ? "s" : "");
+        MainFrame.getInstance().override(DeletingFrame.getInstance());
     }
 
 }

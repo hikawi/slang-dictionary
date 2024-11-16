@@ -2,7 +2,6 @@ package dev.frilly.slangdict.features.search;
 
 import dev.frilly.slangdict.Word;
 import dev.frilly.slangdict.gui.ViewFrame;
-import dev.frilly.slangdict.gui.menu.ViewMenu;
 
 import java.util.Comparator;
 
@@ -21,7 +20,7 @@ public final class SortFavoritesFeature implements Runnable {
     // The current option for the sorting.
     public static int CURRENT = TOP;
 
-    // A comparator that puts favorited words at top.
+    // A comparator that puts favorite words at top.
     public static Comparator<Word> TOP_COMPARATOR = (e1, e2) -> {
         if(e1.favorite && !e2.favorite)
             return -1; // Put favorite before.
@@ -39,7 +38,6 @@ public final class SortFavoritesFeature implements Runnable {
     @Override
     public void run() {
         CURRENT = Math.clamp(selection, TOP, ORDINARY);
-        ViewMenu.getInstance().updateFavorites();
-        ViewFrame.getInstance().query();
+//        ViewFrame.getInstance().query();
     }
 }

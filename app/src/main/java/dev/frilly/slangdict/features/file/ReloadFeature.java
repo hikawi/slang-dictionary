@@ -13,7 +13,7 @@ public final class ReloadFeature implements Runnable {
     @Override
     public void run() {
         Dictionary.getInstance().load();
-        ViewFrame.getInstance().query();
+//        ViewFrame.getInstance().query();
     }
 
 }

@@ -1,24 +1,28 @@
 package dev.frilly.slangdict;
 
-import java.awt.Image;
-import java.awt.Toolkit;
-import java.net.URL;
-
-import javax.swing.ImageIcon;
-import javax.swing.JDialog;
-import javax.swing.JFrame;
-import javax.swing.SwingUtilities;
-
 import com.formdev.flatlaf.intellijthemes.FlatDarkFlatIJTheme;
+import com.formdev.flatlaf.intellijthemes.FlatXcodeDarkIJTheme;
 import com.formdev.flatlaf.util.SystemInfo;
-
 import dev.frilly.slangdict.gui.MainFrame;
 import dev.frilly.slangdict.gui.WelcomeFrame;
+
+import javax.swing.*;
+import java.awt.*;
+import java.net.URL;
 
 /**
  * The main entrypoint of the application.
  */
 public final class Application {
+
+    private static Application instance;
+
+    private Application() {
+    }
+
+    public static Application getInstance() {
+        return instance == null ? instance = new Application() : instance;
+    }
 
     /**
      * Retrieves the version string of this app.
@@ -51,6 +55,18 @@ public final class Application {
         return new ImageIcon(raw.getImage().getScaledInstance(width, height, Image.SCALE_SMOOTH));
     }
 
+    /**
+     * Retrieves a scaled icon on the classpath.
+     *
+     * @param name   The URL as a string.
+     * @param width  The width.
+     * @param height The height.
+     * @return The scaled image.
+     */
+    public static ImageIcon getIcon(final String name, final int width, final int height) {
+        return getIcon(getInstance().getClass().getResource(name), width, height);
+    }
+
     public static void main(String[] args) {
         // Enable Linux default LaF.
         if (SystemInfo.isLinux) {
@@ -67,11 +83,9 @@ public final class Application {
         System.setProperty("apple.awt.application.name", "Slang Dictionary");
         System.setProperty("apple.awt.application.appearance", "system");
 
-        System.out.println("Is EDT: " + SwingUtilities.isEventDispatchThread());
-
         // Start the program.
         SwingUtilities.invokeLater(() -> {
-            FlatDarkFlatIJTheme.setup();
+            FlatXcodeDarkIJTheme.setup();
 
             final var frame = MainFrame.getInstance();
             frame.start();

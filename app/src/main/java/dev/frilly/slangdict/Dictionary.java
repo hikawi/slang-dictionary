@@ -2,17 +2,8 @@ package dev.frilly.slangdict;
 
 import dev.frilly.slangdict.features.search.SortFavoritesFeature;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Scanner;
+import java.io.*;
+import java.util.*;
 import java.util.stream.Stream;
 
 /**
@@ -21,12 +12,18 @@ import java.util.stream.Stream;
 public final class Dictionary {
 
     private static Dictionary instance;
-
+    private final Map<String, Word> words = new HashMap<>();
     private String name;
     private File file;
-    private Map<String, Word> words = new HashMap<>();
 
     private Dictionary() {
+    }
+
+    public static Dictionary getInstance() {
+        return switch (instance) {
+            case null -> instance = new Dictionary();
+            default -> instance;
+        };
     }
 
     /**
@@ -48,6 +45,7 @@ public final class Dictionary {
     }
 
     public Word getWord(final String key) {
+        if (key == null) return null;
         return this.words.get(key.toLowerCase());
     }
 
@@ -95,6 +93,15 @@ public final class Dictionary {
     }
 
     /**
+     * Retrieves the file instance.
+     *
+     * @return The file.
+     */
+    public File getFile() {
+        return file;
+    }
+
+    /**
      * Sets the associated file of this dictionary.
      *
      * @param file The file.
@@ -105,21 +112,12 @@ public final class Dictionary {
     }
 
     /**
-     * Retrieves the file instance.
-     *
-     * @return The file.
-     */
-    public File getFile() {
-        return file;
-    }
-
-    /**
      * Attempts to query the entry list.
      *
      * @param query The query
      * @return The queried results as a stream.
      */
-    public Stream<String> query(final String query) {
+    public Stream<Word> query(final String query) {
         final var q = query.toLowerCase();
         return words
             .entrySet()
@@ -135,14 +133,17 @@ public final class Dictionary {
                     return comp.reversed().compare(e1.getValue(), e2.getValue());
                 else return e1.getKey().compareTo(e2.getKey());
             })
-            .map(Map.Entry::getKey);
+            .map(Map.Entry::getValue);
     }
 
     /**
      * Loads the specified file.
      */
     public void load() {
-        if (file == null || !file.exists()) words.clear();
+        if (file == null || !file.exists()) {
+            words.clear();
+            return;
+        }
 
         try {
             final var tempDict = new HashMap<String, Word>();
@@ -172,9 +173,7 @@ public final class Dictionary {
     /**
      * Loads the defaults dictionary.
      * <p>
-     * The defaults slang.txt in the .jar file has a different format from the
-     * normally saved
-     * dictionary.
+     * The defaults slang.txt in the .jar file has a different format from the normally saved dictionary.
      */
     public void loadDefaults() {
         loadDefaults(false);
@@ -192,8 +191,8 @@ public final class Dictionary {
         words.clear();
 
         try {
-            final var input = new BufferedInputStream(getClass().getResourceAsStream(file));
-
+            final var res = Objects.requireNonNull(getClass().getResourceAsStream(file));
+            final var input = new BufferedInputStream(res);
             final var scanner = new Scanner(input);
 
             while (scanner.hasNext()) {
@@ -239,10 +238,4 @@ public final class Dictionary {
         }
     }
 
-    public static Dictionary getInstance() {
-        return switch (instance) {
-            case null -> instance = new Dictionary();
-            default -> instance;
-        };
-    }
 }

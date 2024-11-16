@@ -1,13 +1,13 @@
 package dev.frilly.slangdict.gui;
 
-import dev.frilly.slangdict.gui.menu.MainBar;
 import dev.frilly.slangdict.interfaces.Overrideable;
 
+import javax.imageio.ImageIO;
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
 import java.util.Stack;
-import javax.imageio.ImageIO;
-import javax.swing.JFrame;
 
 /**
  * The application's frame. This is the one and only frame, no more frames shall be created.
@@ -21,20 +21,30 @@ public final class MainFrame extends JFrame {
 
     private MainFrame() {
         super("Slang Dictionary");
-
-        System.out.println("MainFrame constructor");
         this.stack = new Stack<>();
         this.setup();
     }
 
     private void setup() {
-        System.out.println("MainFrame setup");
-        MainBar.getInstance().init(this);
+        // Load the icon from the JAR
+        Image icon = Toolkit.getDefaultToolkit().getImage(getClass().getResource("/images/book.png"));
+
+        // Set taskbar icon (Java 9+)
+        if (Taskbar.isTaskbarSupported()) {
+            Taskbar taskbar = Taskbar.getTaskbar();
+            try {
+                taskbar.setIconImage(icon);
+            } catch (UnsupportedOperationException e) {
+                System.err.println("The OS does not support setting taskbar icons.");
+            } catch (SecurityException e) {
+                System.err.println("Insufficient permissions to set the taskbar icon.");
+            }
+        }
 
         try {
             final var img = ImageIO.read(getClass().getResourceAsStream("/images/book.png"));
             this.setIconImage(img);
-        } catch (final IOException e) {
+        } catch (final IOException ignored) {
         }
     }
 
@@ -51,7 +61,7 @@ public final class MainFrame extends JFrame {
     /**
      * Push the current frame to the stack, then override the current pane with the new instance.
      */
-    public final void override(final Overrideable instance) {
+    public void override(final Overrideable instance) {
         if (current != null) stack.push(current);
         current = instance;
 
@@ -64,7 +74,7 @@ public final class MainFrame extends JFrame {
      *
      * @return The current frame
      */
-    public final Overrideable getCurrentFrame() {
+    public Overrideable getCurrentFrame() {
         return current;
     }
 
@@ -73,7 +83,7 @@ public final class MainFrame extends JFrame {
      *
      * @param instance The instance.
      */
-    public final void replace(final Overrideable instance) {
+    public void replace(final Overrideable instance) {
         current = instance;
         this.setContentPane(instance.getOverridingPane());
         rerender();
@@ -82,7 +92,7 @@ public final class MainFrame extends JFrame {
     /**
      * Go back to last frame.
      */
-    public final void back() {
+    public void back() {
         // Close if back to nothing.
         if (stack.isEmpty()) dispatchEvent(
             new WindowEvent(this, WindowEvent.WINDOW_CLOSING)

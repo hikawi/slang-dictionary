@@ -9,4 +9,15 @@ public class Word {
     public String definition = "null";
     public boolean locked = false;
     public boolean favorite = false;
+
+    @Override
+    public String toString() {
+        return "Word{" +
+            "word='" + word + '\'' +
+            ", definition='" + definition + '\'' +
+            ", locked=" + locked +
+            ", favorite=" + favorite +
+            '}';
+    }
+
 }

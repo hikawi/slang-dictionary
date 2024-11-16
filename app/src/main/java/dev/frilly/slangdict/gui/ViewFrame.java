@@ -1,60 +1,49 @@
 package dev.frilly.slangdict.gui;
 
-import dev.frilly.slangdict.*;
-import dev.frilly.slangdict.features.edit.DeleteWordFeature;
-import dev.frilly.slangdict.features.file.BombFeature;
+import dev.frilly.slangdict.Application;
+import dev.frilly.slangdict.Dictionary;
 import dev.frilly.slangdict.features.file.CloseDatabaseFeature;
-import dev.frilly.slangdict.features.file.ReloadFeature;
-import dev.frilly.slangdict.features.file.SaveFeature;
+import dev.frilly.slangdict.gui.component.DictionaryModel;
+import dev.frilly.slangdict.gui.component.RandomWordPanel;
 import dev.frilly.slangdict.interfaces.Overrideable;
-import dev.frilly.slangdict.interfaces.Translatable;
-import dev.frilly.slangdict.listener.DocumentChangeListener;
-import dev.frilly.slangdict.model.DictionaryViewModel;
 
-import java.awt.Dimension;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Future;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
 import javax.swing.*;
-import javax.swing.GroupLayout.Alignment;
+import java.awt.*;
+import java.util.Arrays;
+import java.util.Objects;
 
 /**
- * Implementation of the probably most used frame of this application.
- * <p>
- * This is where the dictionary is shown,along with options and tools to manage said dictionary.
+ * The main frame of the application. You spend the most about of time here.
  */
 public final class ViewFrame implements Overrideable {
 
     private static ViewFrame instance;
 
-    private Future<?> future;
+    // The main panel.
+    private final JPanel panel = new JPanel();
 
-    // -------------
-    // UI Components.
-    // -------------
+    // The top left button, to "close the database" and go back one window.
+    private final JButton backButton = new JButton("Back");
 
-    private final JPanel pane;
-
-    // Database close button at top
-    private final JButton backButton = new JButton("Go Back");
-
-    // Database name display & renaming options
+    // The uppermost view, shows which database we're using.
     private final JLabel usingLabel = new JLabel("Using Database");
-    private final JLabel databaseName = new JLabel();
-    private final JTextField databaseNameField = new JTextField();
-    private final JButton rename = new JButton("Rename");
-    private final JButton renameConfirm = new JButton("COnfirm Rename");
+    private final JLabel dbName = new JLabel();
+    private final JTextField dbNameField = new JTextField();
+    private final JButton renameButton = new JButton("Rename");
+    private final Component rigidBox = Box.createHorizontalStrut(16); // To replace with the cancel rename button
+    private final JButton cancelRenameButton = new JButton("Cancel Rename");
+    private final JButton renameConfirmButton = new JButton("Confirm Rename");
 
-    // Search display.
-    private final JLabel searchLabel = new JLabel("Search");
-    private final JTextField searchBox = new JTextField();
-    private final JLabel searchResult = new JLabel();
+    // The second section, that shows a random word of the day.
+    private final RandomWordPanel randomWordPanel = new RandomWordPanel();
 
-    // Button-controls. Entry-specific buttons are on the left, database-wide buttons are on the right.
+    // The third section, that shows a search box and some query text.
+    private final JLabel search = new JLabel("Search: ");
+    private final JTextField searchField = new JTextField();
+    private final JLabel queryResult = new JLabel("Queried 0 results in 0s.");
+    private final JButton historyButton = new JButton("History");
+
+    // The fourth section, that shows editorial buttons.
     private final JButton addButton = new JButton();
     private final JButton editButton = new JButton();
     private final JButton removeButton = new JButton();
@@ -63,232 +52,185 @@ public final class ViewFrame implements Overrideable {
     private final JButton lockButton = new JButton();
     private final JButton unlockButton = new JButton();
 
-    private final JButton bombButton = new JButton();
-    private final JButton saveButton = new JButton();
+    private final JButton resetButton = new JButton();
     private final JButton reloadButton = new JButton();
+    private final JButton bombButton = new JButton();
 
-    // Ok fuck it, what if I just put a JTable
-    private final DictionaryViewModel model = new DictionaryViewModel();
+    // The fifth section, that shows some dictionary entries.
+    private final DictionaryModel model = new DictionaryModel(queryResult);
     private final JTable table = new JTable(model);
-    private final JScrollPane scrollPane = new JScrollPane(table);
+    private final JScrollPane tableScrollPane = new JScrollPane(table);
+
+    // The sixth section, that shows pagination data.
 
     private ViewFrame() {
-        this.pane = new JPanel();
-
-        databaseName.putClientProperty("FlatLaf.styleClass", "h3");
-        searchLabel.putClientProperty("FlatLaf.styleClass", "medium");
-        searchResult.putClientProperty("FlatLaf.styleClass", "semibold");
-
-        backButton.setIcon(Application.getIcon(getClass().getResource("/icons/back.png"), 12, 12));
-
-        addButton.setIcon(Application.getIcon(getClass().getResource("/icons/add.png"), 24, 24));
-        editButton.setIcon(Application.getIcon(getClass().getResource("/icons/edit.png"), 24, 24));
-        removeButton.setIcon(Application.getIcon(getClass().getResource("/icons/remove.png"), 24, 24));
-        starButton.setIcon(Application.getIcon(getClass().getResource("/icons/star-filled.png"), 24, 24));
-        unstarButton.setIcon(Application.getIcon(getClass().getResource("/icons/star.png"), 24, 24));
-        lockButton.setIcon(Application.getIcon(getClass().getResource("/icons/lock.png"), 24, 24));
-        unlockButton.setIcon(Application.getIcon(getClass().getResource("/icons/lock-open.png"), 24, 24));
-
-        bombButton.setIcon(Application.getIcon(getClass().getResource("/icons/bomb.png"), 24, 24));
-        saveButton.setIcon(Application.getIcon(getClass().getResource("/icons/save.png"), 24, 24));
-        reloadButton.setIcon(Application.getIcon(getClass().getResource("/icons/refresh.png"), 24, 24));
-
-        this.setup();
-        this.setupActions();
-    }
-
-    /**
-     * Initialize another query.
-     */
-    public void query() {
-        // Cancel the current querying if there's another query coming.
-        try {
-            if (future != null) future.cancel(true);
-        } catch (Exception ignored) {
-        }
-
-        // Create another query.
-        future = model.query(searchBox.getText()).thenAccept(res ->
-            searchResult.setText("Queried %d result(s) in %.3fs".formatted(res.count(), res.time())));
-    }
-
-    /**
-     * Retrieves the stream of selected words in the table.
-     *
-     * @return The selected words.
-     */
-    public Stream<Word> getSelectedWords() {
-        return Arrays.stream(table.getSelectedRows()).mapToObj(i -> (String) table.getValueAt(i, 0))
-            .map(Dictionary.getInstance()::getWord);
-    }
-
-    /**
-     * Retrieves the instance of the currently selected word only.
-     *
-     * @return The word.
-     */
-    public Word getSelectedWord() {
-        return Dictionary.getInstance().getWord((String) table.getValueAt(table.getSelectedRow(), 0));
-    }
-
-    private void repaint() {
-        databaseName.setText(Dictionary.getInstance().getName());
-        model.fireTableDataChanged();
-    }
-
-    private void setup() {
-        final var layout = new GroupLayout(pane);
-        pane.setLayout(layout);
-        pane.setBorder(BorderFactory.createEmptyBorder(32, 16, 32, 16));
-
-        searchBox.setPreferredSize(new Dimension(600, 24));
-        scrollPane.setPreferredSize(new Dimension(1000, 600));
-        table.getColumnModel().getColumn(0).setPreferredWidth(200);
-        table.getColumnModel().getColumn(1).setPreferredWidth(600);
-        table.getColumnModel().getColumn(2).setPreferredWidth(100);
-        table.getColumnModel().getColumn(3).setPreferredWidth(100);
-        searchBox.setText("");
-        query();
-
-        layout.setVerticalGroup(
-            layout
-                .createSequentialGroup()
-                .addComponent(backButton)
-                .addGap(24)
-                .addGroup(layout.createBaselineGroup(true, false).addComponent(usingLabel).addComponent(databaseName))
-                .addGroup(layout.createParallelGroup(Alignment.TRAILING).addComponent(rename))
-                .addGap(16, 20, 24)
-                .addGroup(
-                    layout.createParallelGroup(Alignment.BASELINE).addComponent(searchLabel).addComponent(searchBox)
-                )
-                .addComponent(searchResult)
-                .addGap(16, 20, 24)
-                .addGroup(
-                    layout
-                        .createParallelGroup(Alignment.BASELINE)
-                        .addComponent(addButton)
-                        .addComponent(editButton)
-                        .addComponent(removeButton)
-                        .addComponent(starButton)
-                        .addComponent(unstarButton)
-                        .addComponent(lockButton)
-                        .addComponent(unlockButton)
-                        .addComponent(bombButton)
-                        .addComponent(saveButton)
-                        .addComponent(reloadButton)
-                )
-                .addGap(12)
-                .addComponent(scrollPane)
-        );
-
-        layout.setHorizontalGroup(
-            layout
-                .createParallelGroup()
-                .addComponent(backButton)
-                .addGroup(layout.createSequentialGroup().addComponent(usingLabel).addGap(10).addComponent(databaseName))
-                .addComponent(rename, Alignment.TRAILING)
-                .addGroup(layout.createSequentialGroup().addComponent(searchLabel).addGap(10).addComponent(searchBox))
-                .addComponent(searchResult)
-                .addGroup(
-                    Alignment.TRAILING,
-                    layout
-                        .createSequentialGroup()
-                        .addComponent(addButton)
-                        .addComponent(editButton)
-                        .addComponent(removeButton)
-                        .addComponent(starButton)
-                        .addComponent(unstarButton)
-                        .addComponent(lockButton)
-                        .addComponent(unlockButton)
-                        .addGap(0, 0, Short.MAX_VALUE)
-                        .addComponent(bombButton)
-                        .addComponent(saveButton)
-                        .addComponent(reloadButton)
-                )
-                .addComponent(scrollPane)
-        );
-
-        layout.linkSize(addButton, bombButton, bombButton, reloadButton, saveButton);
-    }
-
-    private void setupActions() {
-        searchBox
-            .getDocument()
-            .addDocumentListener(
-                (DocumentChangeListener) e -> {
-                    searchResult.setText("Querying...");
-                    query();
-                }
-            );
-
-        table.getSelectionModel().addListSelectionListener(e -> {
-            if (e.getValueIsAdjusting())
-                return;
-
-            // Can only be enabled if no favorite words are selected.
-            removeButton.setEnabled(getSelectedWords().noneMatch(w -> w.favorite));
-
-            // Can only edit if the selected word is not locked.
-            editButton.setEnabled(!getSelectedWord().locked);
-        });
-
-        // Rename button replaces the "database name field" with a textbox, and the rename
-        // button with a confirm button.
-        rename.addActionListener(e -> {
-            final var layout = (GroupLayout) pane.getLayout();
-            layout.replace(rename, renameConfirm);
-            layout.replace(databaseName, databaseNameField);
-            databaseNameField.setText(databaseName.getText());
-            databaseNameField.requestFocus();
-        });
-        databaseNameField.getDocument()
-            .addDocumentListener(
-                (DocumentChangeListener) e -> {
-                    renameConfirm.setEnabled(!databaseNameField.getText().isBlank());
-                }
-            );
-        renameConfirm.addActionListener(e -> {
-            final var layout = (GroupLayout) pane.getLayout();
-            layout.replace(renameConfirm, rename);
-            layout.replace(databaseNameField, databaseName);
-            Dictionary.getInstance().rename(databaseNameField.getText());
-            databaseName.setText(Dictionary.getInstance().getName());
-        });
-
-        removeButton.addActionListener(e -> new DeleteWordFeature().run());
-        
-        bombButton.addActionListener(e -> {
-            final var res = Dialogs.confirm("Are you sure you want to delete all entries of \"%s\"?", Dictionary.getInstance().getName());
-            if (res != JOptionPane.YES_OPTION) return;
-            new BombFeature().run();
-            searchBox.setText("");
-            query();
-        });
-        saveButton.addActionListener(e -> {
-            new SaveFeature().run();
-            if (Dictionary.getInstance().getFile() != null)
-                Dialogs.info("Saved dictionary \"%s\"", Dictionary.getInstance().getName());
-        });
-        reloadButton.addActionListener(e -> {
-            new ReloadFeature().run();
-            if (Dictionary.getInstance().getFile() != null)
-                Dialogs.info("Reloaded dictionary \"%s\"", Dictionary.getInstance().getName());
-        });
-        backButton.addActionListener(e -> new CloseDatabaseFeature().run());
+        setup();
+        setupIcons();
+        setupActions();
     }
 
     public static ViewFrame getInstance() {
-        return switch (instance) {
-            case null -> instance = new ViewFrame();
-            default -> instance;
-        };
+        return instance == null ? instance = new ViewFrame() : instance;
+    }
+
+    private void setup() {
+        final var l = new GroupLayout(panel);
+        panel.setLayout(l);
+        l.setAutoCreateGaps(true);
+        l.setAutoCreateContainerGaps(true);
+
+        l.setHorizontalGroup(l.createParallelGroup(GroupLayout.Alignment.LEADING)
+            .addComponent(backButton)
+            .addGroup(l.createSequentialGroup()
+                .addComponent(usingLabel)
+                .addComponent(dbName))
+            .addGroup(GroupLayout.Alignment.TRAILING, l.createSequentialGroup()
+                .addComponent(rigidBox)
+                .addComponent(renameButton))
+            .addGroup(l.createSequentialGroup()
+                .addComponent(search)
+                .addComponent(searchField)
+                .addComponent(historyButton))
+            .addComponent(queryResult)
+            .addComponent(randomWordPanel)
+            .addGroup(GroupLayout.Alignment.CENTER, l.createSequentialGroup()
+                .addComponent(addButton)
+                .addComponent(editButton)
+                .addComponent(removeButton)
+                .addComponent(starButton)
+                .addComponent(unstarButton)
+                .addComponent(lockButton)
+                .addComponent(unlockButton)
+                .addGap(0, 0, Short.MAX_VALUE)
+                .addComponent(resetButton)
+                .addComponent(reloadButton)
+                .addComponent(bombButton))
+            .addComponent(tableScrollPane));
+        l.setVerticalGroup(l.createSequentialGroup()
+            .addComponent(backButton)
+            .addGap(16, 20, 24)
+            .addGroup(l.createBaselineGroup(true, false)
+                .addComponent(usingLabel)
+                .addComponent(dbName))
+            .addGroup(l.createBaselineGroup(true, false)
+                .addComponent(rigidBox)
+                .addComponent(renameButton))
+            .addGap(24, 28, 32)
+            .addGroup(l.createBaselineGroup(true, false)
+                .addComponent(search)
+                .addComponent(searchField)
+                .addComponent(historyButton))
+            .addGap(4, 6, 8)
+            .addComponent(queryResult)
+            .addGap(12, 14, 16)
+            .addComponent(randomWordPanel)
+            .addGap(24, 28, 32)
+            .addGroup(l.createBaselineGroup(true, false)
+                .addComponent(addButton)
+                .addComponent(editButton)
+                .addComponent(removeButton)
+                .addComponent(starButton)
+                .addComponent(unstarButton)
+                .addComponent(lockButton)
+                .addComponent(unlockButton)
+                .addGap(0, 0, Short.MAX_VALUE)
+                .addComponent(resetButton)
+                .addComponent(reloadButton)
+                .addComponent(bombButton))
+            .addGap(4, 6, 8)
+            .addComponent(tableScrollPane));
+
+        dbName.putClientProperty("FlatLaf.styleClass", "h3");
+        table.setFillsViewportHeight(true);
+        table.getColumnModel().getColumn(0).setPreferredWidth(100);
+        table.getColumnModel().getColumn(1).setPreferredWidth(500);
+        table.getColumnModel().getColumn(2).setPreferredWidth(100);
+        table.getColumnModel().getColumn(3).setPreferredWidth(100);
+
+        l.linkSize(addButton, editButton, removeButton, starButton, unstarButton, lockButton, unlockButton, reloadButton, resetButton, bombButton);
+    }
+
+    private void setupIcons() {
+        backButton.setIcon(Application.getIcon("/icons/back.png", 14, 14));
+        historyButton.setIcon(Application.getIcon("/icons/history.png", 14, 14));
+
+        addButton.setIcon(Application.getIcon("/icons/add.png", 24, 24));
+        editButton.setIcon(Application.getIcon("/icons/edit.png", 24, 24));
+        removeButton.setIcon(Application.getIcon("/icons/remove.png", 24, 24));
+        starButton.setIcon(Application.getIcon("/icons/star.png", 24, 24));
+        unstarButton.setIcon(Application.getIcon("/icons/star-filled.png", 24, 24));
+        lockButton.setIcon(Application.getIcon("/icons/lock.png", 24, 24));
+        unlockButton.setIcon(Application.getIcon("/icons/lock-open.png", 24, 24));
+
+        reloadButton.setIcon(Application.getIcon("/icons/sync.png", 24, 24));
+        resetButton.setIcon(Application.getIcon("/icons/reset.png", 24, 24));
+        bombButton.setIcon(Application.getIcon("/icons/bomb.png", 24, 24));
+    }
+
+    private void setupActions() {
+        // Setup back button.
+        backButton.addActionListener(e -> new CloseDatabaseFeature().run());
+
+        // Search function.
+        searchField.addActionListener(e -> {
+            searchField.setEnabled(false);
+            model.query(searchField.getText(), () -> searchField.setEnabled(true));
+        });
+
+        // Setup rename feature. When rename is clicked, set the text field.
+        // Then there's a Confirm and a Cancel button.
+        renameButton.addActionListener(e -> {
+            final var l = (GroupLayout) panel.getLayout();
+            l.replace(dbName, dbNameField);
+            l.replace(renameButton, renameConfirmButton);
+            l.replace(rigidBox, cancelRenameButton);
+
+            dbNameField.setText(dbName.getText());
+            dbNameField.requestFocus();
+        });
+        renameConfirmButton.addActionListener(e -> {
+            Dictionary.getInstance().rename(dbNameField.getText());
+
+            final var l = (GroupLayout) panel.getLayout();
+            l.replace(dbNameField, dbName);
+            l.replace(renameConfirmButton, renameButton);
+            l.replace(cancelRenameButton, rigidBox);
+            update();
+        });
+        cancelRenameButton.addActionListener(e -> {
+            final var l = (GroupLayout) panel.getLayout();
+            l.replace(dbNameField, dbName);
+            l.replace(renameConfirmButton, renameButton);
+            l.replace(cancelRenameButton, rigidBox);
+        });
+
+        // Setup table selection.
+        table.getSelectionModel().addListSelectionListener(e -> {
+            if (e.getValueIsAdjusting()) return;
+
+            final var s = Arrays.stream(table.getSelectedRows())
+                .mapToObj(i -> (String) model.getValueAt(i, 0))
+                .map(Dictionary.getInstance()::getWord)
+                .filter(Objects::nonNull);
+        });
+    }
+
+    /**
+     * Updates all text data to be up to date.
+     */
+    public void update() {
+        dbName.setText(Dictionary.getInstance().getName());
     }
 
     @Override
     public JPanel getOverridingPane() {
-        searchBox.setText("");
-        repaint();
-        return pane;
+        if (!searchField.getText().isEmpty())
+            searchField.setText("");
+        model.query("", () -> {
+        });
+        randomWordPanel.randomize();
+        update();
+        return panel;
     }
 
 }

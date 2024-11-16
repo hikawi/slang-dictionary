@@ -3,20 +3,20 @@ package dev.frilly.slangdict.features.edit;
 import dev.frilly.slangdict.gui.ViewFrame;
 
 /**
- * Implementation for the "Star all selection" feature.
+ * Implementation for the "Lock word" feature.
  */
-public final class StarWordFeature implements Runnable {
+public final class LockWordFeature implements Runnable {
 
     private final boolean state;
 
-    public StarWordFeature(boolean state) {
+    public LockWordFeature(boolean state) {
         this.state = state;
     }
 
     @Override
     public void run() {
 //        final var words = ViewFrame.getInstance().getSelectedWords();
-//        words.forEach(w -> w.favorite = state);
+//        words.forEach(w -> w.locked = state);
     }
 
 }

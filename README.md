@@ -50,7 +50,7 @@ This project focuses more on IO, OOP, Generics and Collections.
 - [x] Edit a word.
 - [ ] Delete a word, with confirmation.
 - [x] Reset back to default list.
-- [ ] Randomly select a word and display it as the "Word of the Day".
+- [x] Randomly select a word and display it as the "Word of the Day".
 
 ### All
 
@@ -58,11 +58,11 @@ This project focuses more on IO, OOP, Generics and Collections.
 
 This application uses multiple databases, so you can effectively have multiple types of dictionaries, maybe one for English slangs, one for German slangs and one for Russian slangs. Only one database is loaded and viewed at one time to prevent loading too many entries into the memory, as the entire dictionary loads in memory.
 
-| Feature       | Name                                                                                                | Action                                                                                                                                                                                                       |
-| ------------- | --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `file.open`   | Open Database                                                                                       | Open an existing database, usually under the name `<uuid>.dict`.                                                                                                                                             |
-| `file.new`    | Create Database                                                                                     | Create a new database bound to a file, with options to _bootstrap_ the database with default values, like the 7,000 slang words dictionary or the randomly generated 100,000 entries dictionary for testing. |
-| `file.close`  | Close Database                                                                                      | Close the database after asking if the user wants to save any changes.                                                                                                                                       |
-| `file.reload` | Reload Database                                                                                     | Drop all changes and reload the database from the file, if it still exists.                                                                                                                                  |
-| `file.save`   | Save Database                                                                                       | Save all changes done to the currently opened database.                                                                                                                                                      |
-| `file.bomb`   | Bomb Database } Nuke all entries on the database. To save this change, use the `file.save` feature. |
+| Feature       | Name            | Action                                                                                                                                                                                                       |
+|---------------|-----------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `file.open`   | Open Database   | Open an existing database, usually under the name `<uuid>.dict`.                                                                                                                                             |
+| `file.new`    | Create Database | Create a new database bound to a file, with options to _bootstrap_ the database with default values, like the 7,000 slang words dictionary or the randomly generated 100,000 entries dictionary for testing. |
+| `file.close`  | Close Database  | Close the database after asking if the user wants to save any changes.                                                                                                                                       |
+| `file.reload` | Reload Database | Drop all changes and reload the database from the file, if it still exists.                                                                                                                                  |
+| `file.save`   | Save Database   | Save all changes done to the currently opened database.                                                                                                                                                      |
+| `file.bomb`   | Bomb Database   | Nuke all entries on the database. To save this change, use the `file.save` feature.                                                                                                                          |

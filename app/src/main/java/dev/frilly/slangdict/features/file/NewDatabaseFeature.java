@@ -4,6 +4,7 @@ import dev.frilly.slangdict.Dictionary;
 import dev.frilly.slangdict.gui.MainFrame;
 import dev.frilly.slangdict.gui.ProgressFrame;
 import dev.frilly.slangdict.gui.ViewFrame;
+
 import java.io.File;
 import java.util.UUID;
 
