@@ -76,8 +76,6 @@ public final class ViewFrame implements Overrideable {
     private final JTable table = new JTable(model);
     private final JScrollPane tableScrollPane = new JScrollPane(table);
 
-    // The sixth section, that shows pagination data.
-
     private ViewFrame() {
         setup();
         setupIcons();
@@ -219,16 +217,15 @@ public final class ViewFrame implements Overrideable {
         bombButton.setIcon(Application.getIcon("/icons/bomb.png", 24, 24));
     }
 
-    private void setupActions() {
-        // Setup back button.
+    private void setupBackButton() {
         backButton.addActionListener(e -> new CloseDatabaseFeature().run());
+    }
 
-        // Search function.
+    private void setupSearchFunction() {
         searchField.getDocument().addDocumentListener((DocumentChangeListener) e -> {
             if (!instantSearch.isSelected())
                 return;
-            model.query(searchField.getText(), () -> {
-            });
+            model.query(searchField.getText());
         });
         searchField.addActionListener(e -> {
             if (instantSearch.isSelected())
@@ -236,9 +233,16 @@ public final class ViewFrame implements Overrideable {
             searchField.setEnabled(false);
             model.query(searchField.getText(), () -> searchField.setEnabled(true));
         });
+        historyButton.addActionListener(e -> MainFrame.getInstance().override(HistoryFrame.getInstance()));
+    }
 
-        // Setup rename feature. When rename is clicked, set the text field.
-        // Then there's a Confirm and a Cancel button.
+    /**
+     * Setups the rename feature.
+     * <p>
+     * When the rename button is clicked, the text field replaces the name label.
+     * Then the confirm replaces the rename button, then the cancel button appears.
+     */
+    private void setupRenameFunction() {
         renameButton.addActionListener(e -> {
             final var l = (GroupLayout) panel.getLayout();
             l.replace(dbName, dbNameField);
@@ -263,16 +267,15 @@ public final class ViewFrame implements Overrideable {
             l.replace(renameConfirmButton, renameButton);
             l.replace(cancelRenameButton, rigidBox);
         });
+    }
 
-        // Editorial actions.
-        addButton.addActionListener(e -> {
-            MainFrame.getInstance().override(AddingFrame.getInstance());
-        });
+    private void setupWordEditFunctions() {
+        addButton.addActionListener(e -> MainFrame.getInstance().override(AddingFrame.getInstance()));
         editButton.addActionListener(e -> {
             final var v = (String) table.getValueAt(table.getSelectedRow(), 0);
             final var w = Dictionary.getInstance().getWord(v);
 
-            if(w.locked) {
+            if (w.locked) {
                 Dialogs.error("You can't edit a locked word.");
                 return;
             }
@@ -285,7 +288,7 @@ public final class ViewFrame implements Overrideable {
                 .mapToObj(i -> (String) table.getValueAt(i, 0))
                 .toList();
 
-            if(choices.isEmpty()) {
+            if (choices.isEmpty()) {
                 Dialogs.error("You have to select a row first to delete!");
                 return;
             }
@@ -325,7 +328,9 @@ public final class ViewFrame implements Overrideable {
             model.query(searchField.getText());
             table.clearSelection();
         });
+    }
 
+    private void setupDatabaseFunctions() {
         reloadButton.addActionListener(e -> {
             new ReloadFeature().run();
             model.query(searchField.getText());
@@ -335,8 +340,9 @@ public final class ViewFrame implements Overrideable {
             new BombFeature().run();
             model.query(searchField.getText());
         });
+    }
 
-        // Setup table selection.
+    private void setupTableView() {
         table.getSelectionModel().addListSelectionListener(e -> {
             if (e.getValueIsAdjusting()) return;
 
@@ -354,6 +360,15 @@ public final class ViewFrame implements Overrideable {
         sortingOptions.addActionListener(e -> {
             model.query(searchField.getText());
         });
+    }
+
+    private void setupActions() {
+        setupBackButton();
+        setupSearchFunction();
+        setupRenameFunction();
+        setupWordEditFunctions();
+        setupDatabaseFunctions();
+        setupTableView();
     }
 
     /**

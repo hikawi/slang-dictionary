@@ -1,43 +1,81 @@
 package dev.frilly.slangdict.gui.component;
 
-import javax.swing.*;
+import javax.swing.table.AbstractTableModel;
+import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
  * Data class for search history model.
  */
-public final class SearchHistory extends AbstractListModel<String> {
+public final class SearchHistory extends AbstractTableModel {
 
-    private final List<String> history = new ArrayList<>();
+    private final List<HistoryPoint> history = new ArrayList<>();
+
+    public SearchHistory() {
+    }
 
     /**
      * Push to history.
      *
      * @param q The query.
      */
-    public void push(final String q) {
-        history.add(q);
-        fireIntervalAdded(this, history.size() - 1, history.size() - 1);
+    public void push(final String q, final int queries, final double timeTaken) {
+        final var sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+        final var s = sdf.format(new Date());
+
+        history.add(new HistoryPoint(q, queries, timeTaken, s));
+        fireTableRowsInserted(history.size() - 1, history.size() - 1);
     }
 
     /**
      * Clears the search history.
      */
     public void clear() {
-        final var size = history.size();
         history.clear();
-        fireIntervalRemoved(this, 0, size - 1);
+        fireTableDataChanged();
     }
 
     @Override
-    public int getSize() {
+    public int getRowCount() {
         return history.size();
     }
 
     @Override
-    public String getElementAt(int index) {
-        return history.get(index);
+    public int getColumnCount() {
+        return 4;
+    }
+
+    @Override
+    public Class<?> getColumnClass(int columnIndex) {
+        return switch(columnIndex) {
+            case 0, 3 -> String.class;
+            case 1 -> Integer.class;
+            case 2 -> Double.class;
+            default -> Object.class;
+        };
+    }
+
+    @Override
+    public String getColumnName(int column) {
+        return List.of("Query", "Results", "Time taken", "When").get(column);
+    }
+
+    @Override
+    public Object getValueAt(int rowIndex, int columnIndex) {
+        final var point = history.get(history.size() - rowIndex - 1);
+        return switch(columnIndex) {
+            case 0 -> point.query();
+            case 1 -> point.count();
+            case 2 -> point.elapsed();
+            case 3 -> point.time();
+            default -> null;
+        };
+    }
+
+    public record HistoryPoint(String query, int count, double elapsed, String time) {
     }
 
 }

@@ -45,12 +45,13 @@ This project focuses more on IO, OOP, Generics and Collections.
 
 - [x] Find by the word.
 - [x] Find by the definition.
-- [ ] View search history.
+- [x] View search history.
 - [x] Add a new word. Notify if duplicated, and allow overwriting or adding new.
 - [x] Edit a word.
 - [x] Delete a word, with confirmation.
 - [x] Reset back to default list.
 - [x] Randomly select a word and display it as the "Word of the Day".
+- [ ] Quiz Feature
 
 ### All Features
 
@@ -89,9 +90,10 @@ This section provides actions to manipulate the dictionary.
 
 This application provides multiple ways to customize your searches.
 
-| Feature          | Name           | Action                                                                                                                                |
-|------------------|----------------|---------------------------------------------------------------------------------------------------------------------------------------|
-| `search.sort`    | Sort Favorites | Ability to sort favorite words to top, to bottom, hidden, only show favorites or in an ordinary order with other words.               |
-| `search.instant` | Instant Search | Ability to search as you type using Swing Workers.                                                                                    |
-| `search.match`   | Match Searches | Ability to pick whether the search should match against words or definitions, or casings or uses the search text as a regex.          |
-| `search.random`  | Random Word    | See the word of the day, and ability to request a new word. Ability to see a certain message if there is nothing within the database. |
+| Feature          | Name                | Action                                                                                                                                |
+|------------------|---------------------|---------------------------------------------------------------------------------------------------------------------------------------|
+| `search.sort`    | Sort Favorites      | Ability to sort favorite words to top, to bottom, hidden, only show favorites or in an ordinary order with other words.               |
+| `search.instant` | Instant Search      | Ability to search as you type using Swing Workers.                                                                                    |
+| `search.match`   | Match Searches      | Ability to pick whether the search should match against words or definitions, or casings or uses the search text as a regex.          |
+| `search.random`  | Random Word         | See the word of the day, and ability to request a new word. Ability to see a certain message if there is nothing within the database. |
+| `search.history` | View Search History | You can see what words were queried, how many results returned, how much time elapsed and when that query happened.                   |

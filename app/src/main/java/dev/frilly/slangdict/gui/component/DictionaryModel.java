@@ -4,6 +4,7 @@ import dev.frilly.slangdict.Dictionary;
 import dev.frilly.slangdict.Word;
 import dev.frilly.slangdict.features.search.QueryFeature;
 import dev.frilly.slangdict.features.search.SortFavoritesFeature;
+import dev.frilly.slangdict.gui.HistoryFrame;
 
 import javax.swing.*;
 import javax.swing.table.AbstractTableModel;
@@ -73,6 +74,8 @@ public final class DictionaryModel extends AbstractTableModel {
 
                     if (runnable != null)
                         runnable.run();
+
+                    HistoryFrame.getInstance().push(q, query.size(), elapsed / 1000.0);
                 } catch (Exception e) {
                     e.fillInStackTrace();
                 }
