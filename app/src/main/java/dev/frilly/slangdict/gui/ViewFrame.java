@@ -76,6 +76,9 @@ public final class ViewFrame implements Overrideable {
     private final JTable table = new JTable(model);
     private final JScrollPane tableScrollPane = new JScrollPane(table);
 
+    // The final section, the button to go to quiz.
+    private final JButton quizButton = new JButton("Quiz");
+
     private ViewFrame() {
         setup();
         setupIcons();
@@ -132,7 +135,8 @@ public final class ViewFrame implements Overrideable {
                 .addComponent(resetButton)
                 .addComponent(reloadButton)
                 .addComponent(bombButton))
-            .addComponent(tableScrollPane));
+            .addComponent(tableScrollPane)
+            .addComponent(quizButton, GroupLayout.Alignment.CENTER));
 
         l.setVerticalGroup(l.createSequentialGroup()
             .addComponent(backButton)
@@ -179,7 +183,9 @@ public final class ViewFrame implements Overrideable {
                 .addComponent(reloadButton)
                 .addComponent(bombButton))
             .addGap(4, 6, 8)
-            .addComponent(tableScrollPane));
+            .addComponent(tableScrollPane)
+            .addGap(12, 14, 16)
+            .addComponent(quizButton));
 
         dbName.putClientProperty("FlatLaf.styleClass", "h3");
         table.setFillsViewportHeight(true);
@@ -339,6 +345,15 @@ public final class ViewFrame implements Overrideable {
         bombButton.addActionListener(e -> {
             new BombFeature().run();
             model.query(searchField.getText());
+        });
+
+        quizButton.addActionListener(e -> {
+            if(Dictionary.getInstance().getWords().size() < 4) {
+                Dialogs.error("Dictionary needs at least 4 entries.");
+                return;
+            }
+
+            MainFrame.getInstance().override(QuizFrame.getInstance());
         });
     }
 
