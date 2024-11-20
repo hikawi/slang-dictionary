@@ -1,4 +1,4 @@
-package dev.frilly.slangdict.gui.events;
+package dev.frilly.slangdict.events;
 
 /**
  * Base class for all events.

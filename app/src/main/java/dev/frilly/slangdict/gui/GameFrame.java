@@ -3,11 +3,16 @@ package dev.frilly.slangdict.gui;
 import dev.frilly.slangdict.Application;
 import dev.frilly.slangdict.Dictionary;
 import dev.frilly.slangdict.Word;
+import dev.frilly.slangdict.events.DamageEvent;
+import dev.frilly.slangdict.events.EventManager;
+import dev.frilly.slangdict.events.ScoreGainEvent;
 import dev.frilly.slangdict.gui.component.QuizLifelinePanel;
 import dev.frilly.slangdict.interfaces.Overrideable;
+import dev.frilly.slangdict.listener.QuizEventsListener;
 
 import javax.swing.*;
 import java.awt.*;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -24,9 +29,9 @@ public final class GameFrame implements Overrideable {
     private final JPanel contentPane = new JPanel();
 
     // The status bar: score and combo stack.
-    private final JLabel score = new JLabel("Score: ");
+    private final JLabel scoreLabel = new JLabel("Score: ");
     private final JLabel scoreValue = new JLabel("0");
-    private final JLabel combo = new JLabel("Combo: ");
+    private final JLabel comboLabel = new JLabel("Combo: ");
     private final JLabel comboValue = new JLabel("0");
 
     // The HP bar, and the clock.
@@ -36,7 +41,7 @@ public final class GameFrame implements Overrideable {
 
     // The lifelines.
     private final List<QuizLifelinePanel.Partner> partners = new ArrayList<>();
-    private final List<JLabel> partnerIcons = new ArrayList<>();
+    private final List<JButton> partnerIcons = new ArrayList<>();
     private final List<JLabel> partnerNames = new ArrayList<>();
 
     // The quiz.
@@ -46,20 +51,35 @@ public final class GameFrame implements Overrideable {
 
     // Quiz Data.
     private String correctAnswer;
-    private volatile long score = 0;
+    private volatile double score = 0;
+    private volatile long seconds = 20;
     private volatile long combo = 0;
+    private volatile int maxHp = 5000;
     private volatile double hp = 0.0;
     private volatile double comboMultiplier = 1.0;
-    private SwingWorker<Double, Void> gameWorker;
+
+    private SwingWorker<Void, Long> gameWorker;
 
     private GameFrame() {
         init();
         setup();
         setupStyles();
+        setupActions();
+
+        new QuizEventsListener();
     }
 
     public static GameFrame getInstance() {
         return instance == null ? instance = new GameFrame() : instance;
+    }
+
+    private void updateDisplay() {
+        final var format = new DecimalFormat("#,###");
+        scoreValue.setText(format.format(score));
+        hpValue.setText(format.format(hp));
+        comboValue.setText("%d (%.2fx)".formatted(combo, comboMultiplier));
+        hpBar.setValue((int) (hp * 100 / maxHp));
+        clockValue.setText("00:%d".formatted(seconds));
     }
 
     private void init() {
@@ -71,12 +91,21 @@ public final class GameFrame implements Overrideable {
         Stream.of(0, 2, 1, 3).forEach(i -> quizChoicesPanel.add(choices.get(i)));
     }
 
+    /**
+     * Stops the game.
+     */
+    public void stop() {
+        gameWorker.cancel(true);
+    }
+
     private void setupStyles() {
         quizArea.putClientProperty("FlatLaf.styleClass", "h3");
         choices.forEach(c -> {
             c.putClientProperty("FlatLaf.styleClass", "large");
             c.putClientProperty("JButton.buttonType", "roundRect");
         });
+        scoreLabel.putClientProperty("FlatLaf.styleClass", "h4");
+        comboLabel.putClientProperty("FlatLaf.styleClass", "h4");
 
         quizArea.setEditable(false);
         quizArea.setLineWrap(true);
@@ -84,6 +113,7 @@ public final class GameFrame implements Overrideable {
         quizArea.setOpaque(false);
         quizArea.setRows(2);
         quizArea.setMargin(new Insets(0, 0, 0, 0));
+        quizArea.setPreferredSize(new Dimension(1200, 100));
     }
 
     private void createHStack() {
@@ -91,11 +121,16 @@ public final class GameFrame implements Overrideable {
 
         final var hStack = l.createParallelGroup(GroupLayout.Alignment.CENTER)
             .addGroup(l.createSequentialGroup()
-                .addComponent(score)
+                .addComponent(scoreLabel)
                 .addComponent(scoreValue)
                 .addGap(0, 0, Short.MAX_VALUE)
-                .addComponent(combo)
-                .addComponent(comboValue));
+                .addComponent(comboLabel)
+                .addComponent(comboValue))
+            .addGroup(l.createSequentialGroup()
+                .addComponent(hpBar)
+                .addComponent(hpValue)
+                .addGap(0, 0, Short.MAX_VALUE)
+                .addComponent(clockValue));
 
         final var partnersRow = l.createSequentialGroup();
         partnerIcons.forEach(i -> partnersRow.addGroup(l.createParallelGroup(GroupLayout.Alignment.CENTER)
@@ -109,10 +144,15 @@ public final class GameFrame implements Overrideable {
 
         final var vStack = l.createSequentialGroup()
             .addGroup(l.createParallelGroup(GroupLayout.Alignment.CENTER)
-                .addComponent(score)
+                .addComponent(scoreLabel)
                 .addComponent(scoreValue)
-                .addComponent(combo)
-                .addComponent(comboValue));
+                .addComponent(comboLabel)
+                .addComponent(comboValue))
+            .addGroup(l.createParallelGroup(GroupLayout.Alignment.CENTER, true)
+                .addComponent(hpBar)
+                .addComponent(hpValue)
+                .addGap(0, 0, Short.MAX_VALUE)
+                .addComponent(clockValue));
 
         final var partnersRow = l.createParallelGroup(GroupLayout.Alignment.CENTER);
         partnerIcons.forEach(i -> partnersRow.addGroup(l.createSequentialGroup()
@@ -135,12 +175,102 @@ public final class GameFrame implements Overrideable {
         outerPane.add(contentPane, BorderLayout.CENTER);
     }
 
-    private void doAnswer(final boolean correct) {
+    private void setupWorker() {
+        if (gameWorker != null)
+            gameWorker.cancel(true);
 
+        gameWorker = new SwingWorker<>() {
+            @Override
+            protected Void doInBackground() throws Exception {
+                try {
+                    while(true) {
+                        publish(seconds - 1);
+                        Thread.sleep(1000);
+
+                        if (seconds == 0)
+                            return null;
+                    }
+                } catch (final InterruptedException ex) {
+                    return null;
+                }
+            }
+
+            @Override
+            protected void process(List<Long> chunks) {
+                seconds = chunks.get(0);
+
+                final var damage = new DamageEvent(hp, maxHp / 100.0);
+                EventManager.dispatchEvent(damage);
+                if (!damage.isCancelled())
+                    hp -= damage.getDamage();
+                updateDisplay();
+            }
+
+            @Override
+            protected void done() {
+                // When time is over, deal 50% of damage to user.
+                final var damage = new DamageEvent(hp, maxHp / 2.0);
+                EventManager.dispatchEvent(damage);
+                if (!damage.isCancelled())
+                    hp -= damage.getDamage();
+
+                randomQuiz();
+                updateDisplay();
+            }
+        };
+        gameWorker.execute();
+    }
+
+    private void calculateComboMultiplier() {
+        // Just a simple quadratic multiplier. 1 combo = 1.01x, 2 combo = 1.04x, 3 combo = 1.09x.
+        final var additional = (combo * combo) / 100.0;
+        comboMultiplier = 1.0 + additional;
+    }
+
+    private void actCorrectAnswer() {
+        combo++;
+        calculateComboMultiplier();
+
+        final var event = new ScoreGainEvent(score, 100 * comboMultiplier);
+        EventManager.dispatchEvent(event);
+        if (!event.isCancelled())
+            score += event.getGain();
+
+        // Update display and randomize the quiz again.
+        updateDisplay();
+        randomQuiz();
+    }
+
+    private void actIncorrectAnswer() {
+        combo = 0;
+        calculateComboMultiplier();
+
+        final var scoreEvent = new ScoreGainEvent(score, -100);
+        EventManager.dispatchEvent(scoreEvent);
+        if (!scoreEvent.isCancelled())
+            score += scoreEvent.getGain();
+
+        final var damageEvent = new DamageEvent(hp, maxHp / 10);
+        EventManager.dispatchEvent(damageEvent);
+        if (!damageEvent.isCancelled())
+            hp -= damageEvent.getDamage();
+
+        // Update display and randomize the quiz again.
+        updateDisplay();
+        randomQuiz();
     }
 
     private void setupActions() {
-        choices.forEach(btn -> btn.addActionListener(e -> doAnswer(correctAnswer.equals(btn.getText()))));
+        choices.forEach(btn -> btn.addActionListener(e -> {
+            if (btn.getText().equals(correctAnswer)) {
+                actCorrectAnswer();
+            } else {
+                actIncorrectAnswer();
+            }
+
+            seconds = 20;
+            updateDisplay();
+        }));
     }
 
     private Word getRandomWord() {
@@ -153,17 +283,17 @@ public final class GameFrame implements Overrideable {
         final var others = new ArrayList<Word>();
 
         // Make sure to add 3 other answers not the question.
-        while(true) {
-            if(others.size() == 3)
+        while (true) {
+            if (others.size() == 3)
                 break;
 
             final var next = getRandomWord();
-            if(next == question || others.contains(next))
+            if (next == question || others.contains(next))
                 continue;
             others.add(next);
         }
 
-        if(ThreadLocalRandom.current().nextBoolean()) {
+        if (ThreadLocalRandom.current().nextBoolean()) {
             // Ask word, answer definitions.
             quizArea.setText(question.word);
 
@@ -200,8 +330,8 @@ public final class GameFrame implements Overrideable {
 
         partners.forEach(p -> {
             this.partners.add(p);
-            this.partnerIcons.add(new JLabel(Application.getIcon("/images/%s.png".formatted(p.name().toLowerCase()), 64, 64)));
-            this.partnerNames.add(new JLabel(p.name()));
+            this.partnerIcons.add(new JButton(Application.getIcon("/images/%s.png".formatted(p.name().toLowerCase()), 64, 64)));
+            this.partnerNames.add(new JLabel(p.name().substring(0, 1).toUpperCase() + p.name().substring(1).toLowerCase()));
         });
 
         setup();
@@ -209,8 +339,13 @@ public final class GameFrame implements Overrideable {
 
     @Override
     public JPanel getOverridingPane() {
-        if(gameWorker != null)
-            gameWorker.cancel(true);
+        hp = maxHp;
+        combo = 0;
+        comboMultiplier = 1.0;
+        score = 0.0;
+        updateDisplay();
+        randomQuiz();
+        setupWorker();
         return outerPane;
     }
 
