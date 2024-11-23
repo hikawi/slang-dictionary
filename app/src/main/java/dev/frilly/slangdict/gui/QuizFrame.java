@@ -83,7 +83,7 @@ public final class QuizFrame implements Overrideable {
         nevermindButton.addActionListener(e -> MainFrame.getInstance().back());
         startButton.addActionListener(e -> {
             GameFrame.getInstance().setPartners(lifelinePanel.getQueue());
-            MainFrame.getInstance().override(GameFrame.getInstance());
+            MainFrame.getInstance().replace(GameFrame.getInstance());
         });
     }
 

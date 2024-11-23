@@ -93,6 +93,14 @@ public final class QuizLifelinePanel extends JPanel {
 
     private void setupActions() {
         partners.forEach((key, value) -> value.addActionListener(ev -> {
+            if(queue.contains(key)) {
+                if(value.isSelected())
+                    return;
+                queue.remove(key);
+                value.setSelected(false);
+                return;
+            }
+
             if (queue.size() >= 4) {
                 final var last = queue.pollLast();
                 partners.get(last).setSelected(false);
