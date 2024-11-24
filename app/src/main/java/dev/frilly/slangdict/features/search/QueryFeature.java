@@ -62,12 +62,12 @@ public final class QueryFeature implements Supplier<Stream<Word>> {
         final var q = matchCase ? query : query.toLowerCase(Locale.US);
 
         final var wordPred = (Predicate<Word>) w -> {
-            final var word = matchCase ? w.word.toLowerCase(Locale.US) : w.word;
+            final var word = matchCase ? w.word : w.word.toLowerCase(Locale.US);
             return matchWord && word.contains(q);
         };
         final var defPred = (Predicate<Word>) w -> {
-            final var def = matchCase ? w.definition.toLowerCase(Locale.US)
-                                      : w.definition;
+            final var def = matchCase ? w.definition
+                                      : w.definition.toLowerCase(Locale.US);
             return matchDefinition && def.contains(q);
         };
 

@@ -36,7 +36,7 @@ public final class EventManager {
             outer:
             for (final var method : listener.getClass().getDeclaredMethods()) {
                 // Skip bad methods (different params count, different return type, non-member methods).
-                if (isEventHandler(method)) {
+                if (!isEventHandler(method)) {
                     continue;
                 }
 

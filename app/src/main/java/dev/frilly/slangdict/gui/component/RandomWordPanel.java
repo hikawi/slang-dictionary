@@ -39,9 +39,7 @@ public final class RandomWordPanel extends JPanel {
             BorderFactory.createLineBorder(Color.GRAY, 2),
             BorderFactory.createEmptyBorder(16, 16, 16, 16)));
         setPreferredSize(new Dimension(800, 100));
-
-        final var ol = new GroupLayout(this);
-        setLayout(ol);
+        setLayout(new BorderLayout());
 
         emptyLabel.setHorizontalAlignment(SwingConstants.CENTER);
         emptyLabel.setVerticalAlignment(SwingConstants.CENTER);
@@ -56,27 +54,22 @@ public final class RandomWordPanel extends JPanel {
         likeButton.setIcon(Application.getIcon("/icons/like.png", 16, 16));
         randomButton.setIcon(Application.getIcon("/icons/random.png", 16, 16));
 
-        ol.setHorizontalGroup(
-            ol.createSequentialGroup().addComponent(emptyPane));
-        ol.setVerticalGroup(ol.createSequentialGroup().addComponent(emptyPane));
-
         l.setHorizontalGroup(
             l.createParallelGroup(GroupLayout.Alignment.LEADING, true)
                 .addComponent(wordLabel)
                 .addComponent(descriptionTextArea)
                 .addGroup(GroupLayout.Alignment.TRAILING,
-                          l.createSequentialGroup()
-                              .addComponent(likeButton)
-                              .addComponent(randomButton)));
+                    l.createSequentialGroup()
+                        .addComponent(likeButton)
+                        .addComponent(randomButton)));
         l.setVerticalGroup(l.createSequentialGroup()
-                               .addComponent(wordLabel)
-                               .addGap(4, 6, 8)
-                               .addComponent(descriptionTextArea)
-                               .addGap(10, 14, 18)
-                               .addGroup(l.createParallelGroup(
-                                       GroupLayout.Alignment.CENTER, true)
-                                             .addComponent(likeButton)
-                                             .addComponent(randomButton)));
+            .addComponent(wordLabel)
+            .addGap(4, 6, 8)
+            .addComponent(descriptionTextArea)
+            .addGap(10, 14, 18)
+            .addGroup(l.createParallelGroup(GroupLayout.Alignment.CENTER, true)
+                .addComponent(likeButton)
+                .addComponent(randomButton)));
 
         l.linkSize(likeButton, randomButton);
         wordLabel.putClientProperty("FlatLaf.styleClass", "h3");
@@ -137,8 +130,7 @@ public final class RandomWordPanel extends JPanel {
     private void updateWord(final Word w) {
         word = Optional.ofNullable(w);
         if (word.isEmpty()) {
-            final var l = (GroupLayout) getLayout();
-            l.replace(contentPane, emptyPane);
+            add(emptyPane, BorderLayout.CENTER);
         } else {
             wordLabel.setText(w.word);
             descriptionTextArea.setText(w.definition);
@@ -147,9 +139,7 @@ public final class RandomWordPanel extends JPanel {
                                         : "/icons/star.png";
             wordLabel.setIcon(Application.getIcon(icon, 24, 24));
             likeButton.setEnabled(!w.favorite);
-
-            final var l = (GroupLayout) getLayout();
-            l.replace(emptyPane, contentPane);
+            add(contentPane, BorderLayout.CENTER);
         }
     }
 
