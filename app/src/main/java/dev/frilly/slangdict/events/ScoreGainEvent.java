@@ -8,14 +8,13 @@ import dev.frilly.slangdict.interfaces.Cancellable;
  */
 public final class ScoreGainEvent extends Event implements Cancellable {
 
-    private boolean cancelled = false;
-
-    private double gain;
     private final double currentScore;
+    private boolean cancelled = false;
+    private       double gain;
 
     public ScoreGainEvent(double currentScore, double gain) {
         this.currentScore = currentScore;
-        this.gain = gain;
+        this.gain         = gain;
     }
 
     public double getGain() {

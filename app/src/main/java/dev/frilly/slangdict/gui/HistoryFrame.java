@@ -13,32 +13,19 @@ public final class HistoryFrame implements Overrideable {
 
     private static HistoryFrame instance;
 
-    private final JPanel panel = new JPanel();
+    private final JPanel        panel   = new JPanel();
     private final SearchHistory history = new SearchHistory();
 
-    private final JLabel searchHistory = new JLabel("Your Search History");
-    private final JTable searchList = new JTable(history);
-    private final JScrollPane scrollPane = new JScrollPane(searchList);
+    private final JLabel      searchHistory = new JLabel("Your Search History");
+    private final JTable      searchList    = new JTable(history);
+    private final JScrollPane scrollPane    = new JScrollPane(searchList);
 
     private final JButton clearHistory = new JButton("Clear History");
-    private final JButton back = new JButton("Back");
+    private final JButton back         = new JButton("Back");
 
     private HistoryFrame() {
         setup();
         setupActions();
-    }
-
-    public static HistoryFrame getInstance() {
-        return instance == null ? instance = new HistoryFrame() : instance;
-    }
-
-    /**
-     * Pushes an entry to the search history.
-     *
-     * @param q The entry.
-     */
-    public void push(final String q, final int queries, final double timeTaken) {
-        history.push(q, queries, timeTaken);
     }
 
     private void setup() {
@@ -50,12 +37,14 @@ public final class HistoryFrame implements Overrideable {
         searchList.getColumnModel().getColumn(3).setMinWidth(300);
         scrollPane.setPreferredSize(new Dimension(600, 400));
 
-        l.setHorizontalGroup(l.createParallelGroup(GroupLayout.Alignment.LEADING)
-            .addComponent(searchHistory)
-            .addComponent(scrollPane)
-            .addGroup(GroupLayout.Alignment.TRAILING, l.createSequentialGroup()
-                .addComponent(back)
-                .addComponent(clearHistory)));
+        l.setHorizontalGroup(
+            l.createParallelGroup(GroupLayout.Alignment.LEADING)
+                .addComponent(searchHistory)
+                .addComponent(scrollPane)
+                .addGroup(GroupLayout.Alignment.TRAILING,
+                    l.createSequentialGroup()
+                        .addComponent(back)
+                        .addComponent(clearHistory)));
 
         l.setVerticalGroup(l.createSequentialGroup()
             .addComponent(searchHistory)
@@ -71,6 +60,23 @@ public final class HistoryFrame implements Overrideable {
     private void setupActions() {
         back.addActionListener(e -> MainFrame.getInstance().back());
         clearHistory.addActionListener(e -> history.clear());
+    }
+
+    public static HistoryFrame getInstance() {
+        return instance == null ? instance = new HistoryFrame() : instance;
+    }
+
+    /**
+     * Pushes an entry to the search history.
+     *
+     * @param q The entry.
+     */
+    public void push(
+        final String q,
+        final int queries,
+        final double timeTaken
+    ) {
+        history.push(q, queries, timeTaken);
     }
 
     @Override

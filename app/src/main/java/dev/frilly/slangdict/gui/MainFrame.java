@@ -10,14 +10,15 @@ import java.io.IOException;
 import java.util.Stack;
 
 /**
- * The application's frame. This is the one and only frame, no more frames shall be created.
+ * The application's frame. This is the one and only frame, no more frames
+ * shall be created.
  */
 public final class MainFrame extends JFrame {
 
     private static MainFrame instance;
 
     private final Stack<Overrideable> stack;
-    private Overrideable current;
+    private       Overrideable        current;
 
     private MainFrame() {
         super("Slang Dictionary");
@@ -27,7 +28,8 @@ public final class MainFrame extends JFrame {
 
     private void setup() {
         // Load the icon from the JAR
-        Image icon = Toolkit.getDefaultToolkit().getImage(getClass().getResource("/images/book.png"));
+        Image icon = Toolkit.getDefaultToolkit()
+            .getImage(getClass().getResource("/images/book.png"));
 
         // Set taskbar icon (Java 9+)
         if (Taskbar.isTaskbarSupported()) {
@@ -35,17 +37,32 @@ public final class MainFrame extends JFrame {
             try {
                 taskbar.setIconImage(icon);
             } catch (UnsupportedOperationException e) {
-                System.err.println("The OS does not support setting taskbar icons.");
+                System.err.println(
+                    "The OS does not support setting taskbar icons.");
             } catch (SecurityException e) {
-                System.err.println("Insufficient permissions to set the taskbar icon.");
+                System.err.println(
+                    "Insufficient permissions to set the taskbar icon.");
             }
         }
 
         try {
-            final var img = ImageIO.read(getClass().getResourceAsStream("/images/book.png"));
+            final var img = ImageIO.read(
+                getClass().getResourceAsStream("/images/book.png"));
             this.setIconImage(img);
         } catch (final IOException ignored) {
         }
+    }
+
+    /**
+     * Retrieves the instance of the main frame.
+     *
+     * @return The frame.
+     */
+    public static MainFrame getInstance() {
+        if (instance == null) {
+            instance = new MainFrame();
+        }
+        return instance;
     }
 
     /**
@@ -59,14 +76,24 @@ public final class MainFrame extends JFrame {
     }
 
     /**
-     * Push the current frame to the stack, then override the current pane with the new instance.
+     * Push the current frame to the stack, then override the current pane
+     * with the new instance.
      */
     public void override(final Overrideable instance) {
-        if (current != null) stack.push(current);
+        if (current != null) {
+            stack.push(current);
+        }
         current = instance;
 
         this.setContentPane(instance.getOverridingPane());
         rerender();
+    }
+
+    private void rerender() {
+        this.pack();
+        this.setLocationRelativeTo(null);
+        this.revalidate();
+        this.repaint();
     }
 
     /**
@@ -79,7 +106,8 @@ public final class MainFrame extends JFrame {
     }
 
     /**
-     * Override the pane with the new instance, without pushing the current frame to the stack.
+     * Override the pane with the new instance, without pushing the current
+     * frame to the stack.
      *
      * @param instance The instance.
      */
@@ -94,30 +122,13 @@ public final class MainFrame extends JFrame {
      */
     public void back() {
         // Close if back to nothing.
-        if (stack.isEmpty()) dispatchEvent(
-            new WindowEvent(this, WindowEvent.WINDOW_CLOSING)
-        );
+        if (stack.isEmpty()) {
+            dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING));
+        }
 
         current = stack.pop();
         this.setContentPane(current.getOverridingPane());
         rerender();
-    }
-
-    private void rerender() {
-        this.pack();
-        this.setLocationRelativeTo(null);
-        this.revalidate();
-        this.repaint();
-    }
-
-    /**
-     * Retrieves the instance of the main frame.
-     *
-     * @return The frame.
-     */
-    public static MainFrame getInstance() {
-        if (instance == null) instance = new MainFrame();
-        return instance;
     }
 
 }

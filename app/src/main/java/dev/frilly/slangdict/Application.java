@@ -1,6 +1,5 @@
 package dev.frilly.slangdict;
 
-import com.formdev.flatlaf.intellijthemes.FlatDarkFlatIJTheme;
 import com.formdev.flatlaf.intellijthemes.FlatXcodeDarkIJTheme;
 import com.formdev.flatlaf.util.SystemInfo;
 import dev.frilly.slangdict.gui.MainFrame;
@@ -20,10 +19,6 @@ public final class Application {
     private Application() {
     }
 
-    public static Application getInstance() {
-        return instance == null ? instance = new Application() : instance;
-    }
-
     /**
      * Retrieves the version string of this app.
      *
@@ -34,12 +29,20 @@ public final class Application {
     }
 
     /**
-     * Shortcut to call the getMenuShortcutKeyMaskEx() from default toolkit.
+     * Retrieves a scaled icon on the classpath.
      *
-     * @return The int code.
+     * @param name   The URL as a string.
+     * @param width  The width.
+     * @param height The height.
+     *
+     * @return The scaled image.
      */
-    public static int getMaskedMetaKey() {
-        return Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx();
+    public static ImageIcon getIcon(
+        final String name,
+        final int width,
+        final int height
+    ) {
+        return getIcon(Application.class.getResource(name), width, height);
     }
 
     /**
@@ -48,26 +51,22 @@ public final class Application {
      * @param url    The load url.
      * @param width  The width to scale to.
      * @param height The height to scale to.
-     * @return The scaled image.
-     */
-    public static ImageIcon getIcon(final URL url, final int width, final int height) {
-        final var raw = new ImageIcon(url);
-        return new ImageIcon(raw.getImage().getScaledInstance(width, height, Image.SCALE_SMOOTH));
-    }
-
-    /**
-     * Retrieves a scaled icon on the classpath.
      *
-     * @param name   The URL as a string.
-     * @param width  The width.
-     * @param height The height.
      * @return The scaled image.
      */
-    public static ImageIcon getIcon(final String name, final int width, final int height) {
-        return getIcon(getInstance().getClass().getResource(name), width, height);
+    public static ImageIcon getIcon(
+        final URL url,
+        final int width,
+        final int height
+    ) {
+        final var raw = new ImageIcon(url);
+        return new ImageIcon(raw.getImage()
+            .getScaledInstance(width, height, Image.SCALE_SMOOTH));
     }
 
     public static void main(String[] args) {
+        Application.getInstance();
+
         // Enable Linux default LaF.
         if (SystemInfo.isLinux) {
             JFrame.setDefaultLookAndFeelDecorated(true);
@@ -91,6 +90,10 @@ public final class Application {
             frame.start();
             frame.override(WelcomeFrame.getInstance());
         });
+    }
+
+    public static Application getInstance() {
+        return instance == null ? instance = new Application() : instance;
     }
 
 }

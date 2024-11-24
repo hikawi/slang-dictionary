@@ -1,6 +1,6 @@
 package dev.frilly.slangdict.interfaces;
 
-import javax.swing.JPanel;
+import javax.swing.*;
 
 /**
  * An interface for a frame that can override the Main Frame,

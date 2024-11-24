@@ -26,8 +26,9 @@ public final class GameWorker extends SwingWorker<Void, Long> {
                 publish(state.getSeconds() - 1);
                 Thread.sleep(1000);
 
-                if (state.getSeconds() == 0)
+                if (state.getSeconds() == 0) {
                     return null;
+                }
             }
         } catch (final InterruptedException ex) {
             return null;
@@ -38,20 +39,26 @@ public final class GameWorker extends SwingWorker<Void, Long> {
     protected void process(List<Long> chunks) {
         state.setSeconds(chunks.get(0));
 
-        final var damage = new DamageEvent(state.getHp(), state.getMaxHp() / 100.0, DamageEvent.DamageReason.CLOCK);
+        final var damage = new DamageEvent(state.getHp(),
+                                           state.getMaxHp() / 100.0,
+                                           DamageEvent.DamageReason.CLOCK);
         EventManager.dispatchEvent(damage);
-        if (!damage.isCancelled())
+        if (!damage.isCancelled()) {
             state.setHp(state.getHp() - damage.getDamage());
+        }
         GameFrame.getInstance().updateDisplay();
     }
 
     @Override
     protected void done() {
         // When time is over, deal 50% of damage to user.
-        final var damage = new DamageEvent(state.getHp(), state.getMaxHp() / 2.0, DamageEvent.DamageReason.CLOCK);
+        final var damage = new DamageEvent(state.getHp(),
+                                           state.getMaxHp() / 2.0,
+                                           DamageEvent.DamageReason.CLOCK);
         EventManager.dispatchEvent(damage);
-        if (!damage.isCancelled())
+        if (!damage.isCancelled()) {
             state.setHp(state.getHp() - damage.getDamage());
+        }
 
         GameFrame.getInstance().randomQuiz();
         GameFrame.getInstance().updateDisplay();

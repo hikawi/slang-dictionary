@@ -1,6 +1,7 @@
 package dev.frilly.slangdict.gui;
 
 import dev.frilly.slangdict.Application;
+import dev.frilly.slangdict.Utilities;
 import dev.frilly.slangdict.features.file.OpenDatabaseFeature;
 import dev.frilly.slangdict.features.file.QuitFeature;
 import dev.frilly.slangdict.interfaces.Overrideable;
@@ -20,38 +21,31 @@ public final class WelcomeFrame implements Overrideable {
     private final JPanel panel = new JPanel();
 
     // The header, shows the logo and the version.
-    private final JLabel bookIcon = new JLabel(Application.getIcon("/images/book.png", 64, 64));
+    private final JLabel bookIcon    = new JLabel(
+        Application.getIcon("/images/book.png", 64, 64));
     private final JLabel programName = new JLabel("Dictionary");
-    private final JLabel versionName = new JLabel(String.format("Version %s", Application.getVersion()));
+    private final JLabel versionName = new JLabel(
+        String.format("Version %s", Application.getVersion()));
 
     // Buttons and labels are separate. Buttons stack on top of labels.
-    private final JButton newDatabase = new JButton(Application.getIcon("/icons/library-add.png", 32, 32));
-    private final JButton openDatabase = new JButton(Application.getIcon("/icons/file-open.png", 32, 32));
-    private final JButton quitProgram = new JButton(Application.getIcon("/icons/exit.png", 32, 32));
-    private final JLabel newDatabaseLabel = new JLabel("New Database");
-    private final JLabel openDatabaseLabel = new JLabel("Open Existing");
-    private final JLabel quitProgramLabel = new JLabel("Quit Program");
+    private final JButton newDatabase       = new JButton(
+        Application.getIcon("/icons/library-add.png", 32, 32));
+    private final JButton openDatabase      = new JButton(
+        Application.getIcon("/icons/file-open.png", 32, 32));
+    private final JButton quitProgram       = new JButton(
+        Application.getIcon("/icons/exit.png", 32, 32));
+    private final JLabel  newDatabaseLabel  = new JLabel("New Database");
+    private final JLabel  openDatabaseLabel = new JLabel("Open Existing");
+    private final JLabel  quitProgramLabel  = new JLabel("Quit Program");
 
     private WelcomeFrame() {
         setup();
         setupActions();
     }
 
-    public static WelcomeFrame getInstance() {
-        return instance == null ? instance = new WelcomeFrame() : instance;
-    }
-
-    @Override
-    public JPanel getOverridingPane() {
-        return panel;
-    }
-
     private void setup() {
-        final var layout = new GroupLayout(panel);
-        panel.setLayout(layout);
+        final var layout = Utilities.group(panel);
         panel.setBorder(BorderFactory.createEmptyBorder(32, 32, 32, 32));
-        layout.setAutoCreateGaps(true);
-        layout.setAutoCreateContainerGaps(true);
 
         programName.putClientProperty("FlatLaf.styleClass", "h1");
         versionName.putClientProperty("FlatLaf.styleClass", "semibold");
@@ -99,9 +93,19 @@ public final class WelcomeFrame implements Overrideable {
     }
 
     private void setupActions() {
-        newDatabase.addActionListener(e -> MainFrame.getInstance().override(CreationFrame.getInstance()));
+        newDatabase.addActionListener(
+            e -> MainFrame.getInstance().override(CreationFrame.getInstance()));
         openDatabase.addActionListener(e -> new OpenDatabaseFeature().run());
         quitProgram.addActionListener(e -> new QuitFeature().run());
+    }
+
+    public static WelcomeFrame getInstance() {
+        return instance == null ? instance = new WelcomeFrame() : instance;
+    }
+
+    @Override
+    public JPanel getOverridingPane() {
+        return panel;
     }
 
 }

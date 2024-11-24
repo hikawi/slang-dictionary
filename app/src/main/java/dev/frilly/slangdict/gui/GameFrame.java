@@ -2,6 +2,7 @@ package dev.frilly.slangdict.gui;
 
 import dev.frilly.slangdict.Application;
 import dev.frilly.slangdict.Dictionary;
+import dev.frilly.slangdict.Utilities;
 import dev.frilly.slangdict.Word;
 import dev.frilly.slangdict.features.quiz.LifelineFeature;
 import dev.frilly.slangdict.gui.component.GameState;
@@ -26,7 +27,7 @@ public final class GameFrame implements Overrideable {
     private static GameFrame instance;
 
     // Panels.
-    private final JPanel outerPane = new JPanel(new BorderLayout());
+    private final JPanel outerPane   = new JPanel(new BorderLayout());
     private final JPanel contentPane = new JPanel();
 
     // The status bar: score and combo stack.
@@ -36,29 +37,33 @@ public final class GameFrame implements Overrideable {
     private final JLabel comboValue = new JLabel("0");
 
     // The HP bar, and the clock.
-    private final JProgressBar hpBar = new JProgressBar();
-    private final JLabel hpValue = new JLabel();
-    private final JLabel clockValue = new JLabel();
+    private final JProgressBar hpBar      = new JProgressBar();
+    private final JLabel       hpValue    = new JLabel();
+    private final JLabel       clockValue = new JLabel();
 
     // The lifelines.
-    private final List<QuizLifelinePanel.Partner> partners = new ArrayList<>();
-    private final List<JButton> partnerIcons = List.of(new JButton(), new JButton(), new JButton(), new JButton());
-    private final List<JLabel> partnerNames = List.of(new JLabel(), new JLabel(), new JLabel(), new JLabel());
+    private final List<QuizLifelinePanel.Partner> partners     =
+        new ArrayList<>();
+    private final List<JButton>                   partnerIcons = List.of(
+        new JButton(), new JButton(), new JButton(), new JButton());
+    private final List<JLabel>                    partnerNames = List.of(
+        new JLabel(), new JLabel(), new JLabel(), new JLabel());
 
     // The quiz.
-    private final JTextArea quizArea = new JTextArea();
-    private final JPanel quizChoicesPanel = new JPanel(new GridLayout(2, 2, 8, 8));
-    private final List<JButton> choices = IntStream.range(0, 4).mapToObj(i -> new JButton(String.valueOf(i))).toList();
+    private final JTextArea     quizArea         = new JTextArea();
+    private final JPanel        quizChoicesPanel = new JPanel(
+        new GridLayout(2, 2, 8, 8));
+    private final List<JButton> choices          = IntStream.range(0, 4)
+        .mapToObj(i -> new JButton(String.valueOf(i)))
+        .toList();
 
-    private final GameState state = new GameState();
-    private SwingWorker<Void, Long> gameWorker;
+    private final GameState               state = new GameState();
+    private       SwingWorker<Void, Long> gameWorker;
 
     private GameFrame() {
-        final var l = new GroupLayout(contentPane);
-        contentPane.setLayout(l);
-        l.setAutoCreateGaps(true);
-        l.setAutoCreateContainerGaps(true);
-        Stream.of(0, 2, 1, 3).forEach(i -> quizChoicesPanel.add(choices.get(i)));
+        final var l = Utilities.group(contentPane);
+        Stream.of(0, 2, 1, 3)
+            .forEach(i -> quizChoicesPanel.add(choices.get(i)));
 
         setup();
         setupStyles();
@@ -67,36 +72,10 @@ public final class GameFrame implements Overrideable {
         new QuizEventsListener();
     }
 
-    public static GameFrame getInstance() {
-        return instance == null ? instance = new GameFrame() : instance;
-    }
-
-    /**
-     * Retrieves the game state.
-     *
-     * @return The state.
-     */
-    public GameState getState() {
-        return state;
-    }
-
-    /**
-     * Updates the current display of the game frame.
-     */
-    public void updateDisplay() {
-        final var format = new DecimalFormat("#,###");
-        scoreValue.setText(format.format(state.getScore()));
-        hpValue.setText(format.format(state.getHp()));
-        comboValue.setText("%d (%.2fx)".formatted(state.getCombo(), state.getComboMultiplier()));
-        hpBar.setValue((int) (state.getHp() * 100 / state.getMaxHp()));
-        clockValue.setText("00:%02d".formatted(state.getSeconds()));
-    }
-
-    /**
-     * Stops the game.
-     */
-    public void stop() {
-        gameWorker.cancel(true);
+    private void setup() {
+        createHStack();
+        createVStack();
+        outerPane.add(contentPane, BorderLayout.CENTER);
     }
 
     private void setupStyles() {
@@ -119,6 +98,16 @@ public final class GameFrame implements Overrideable {
         quizArea.setPreferredSize(new Dimension(1200, 100));
     }
 
+    private void setupActions() {
+        choices.forEach(
+            btn -> btn.addActionListener(e -> state.actAnswer(btn.getText())));
+        partnerIcons.forEach(p -> p.addActionListener(e -> {
+            final var idx = partnerIcons.indexOf(p);
+            p.setEnabled(false);
+            new LifelineFeature(partners.get(idx)).run();
+        }));
+    }
+
     private void createHStack() {
         final var l = (GroupLayout) contentPane.getLayout();
 
@@ -136,10 +125,14 @@ public final class GameFrame implements Overrideable {
                 .addComponent(clockValue));
 
         final var partnersRow = l.createSequentialGroup();
-        partnerIcons.forEach(i -> partnersRow.addGroup(l.createParallelGroup(GroupLayout.Alignment.CENTER)
-            .addComponent(i).addComponent(partnerNames.get(partnerIcons.indexOf(i)))));
+        partnerIcons.forEach(i -> partnersRow.addGroup(
+            l.createParallelGroup(GroupLayout.Alignment.CENTER)
+                .addComponent(i)
+                .addComponent(partnerNames.get(partnerIcons.indexOf(i)))));
 
-        l.setHorizontalGroup(hStack.addGroup(partnersRow).addComponent(quizArea).addComponent(quizChoicesPanel));
+        l.setHorizontalGroup(hStack.addGroup(partnersRow)
+            .addComponent(quizArea)
+            .addComponent(quizChoicesPanel));
     }
 
     private void createVStack() {
@@ -157,14 +150,14 @@ public final class GameFrame implements Overrideable {
                 .addGap(0, 0, Short.MAX_VALUE)
                 .addComponent(clockValue));
 
-        final var partnersRow = l.createParallelGroup(GroupLayout.Alignment.CENTER);
+        final var partnersRow = l.createParallelGroup(
+            GroupLayout.Alignment.CENTER);
         partnerIcons.forEach(i -> partnersRow.addGroup(l.createSequentialGroup()
             .addComponent(i)
             .addGap(4)
             .addComponent(partnerNames.get(partnerIcons.indexOf(i)))));
 
-        l.setVerticalGroup(vStack
-            .addGap(24, 28, 32)
+        l.setVerticalGroup(vStack.addGap(24, 28, 32)
             .addGroup(partnersRow)
             .addGap(24, 28, 32)
             .addComponent(quizArea)
@@ -172,56 +165,24 @@ public final class GameFrame implements Overrideable {
             .addComponent(quizChoicesPanel));
     }
 
-    private void setup() {
-        createHStack();
-        createVStack();
-        outerPane.add(contentPane, BorderLayout.CENTER);
-    }
-
-    private void setupWorker() {
-        if (gameWorker != null)
-            gameWorker.cancel(true);
-
-        gameWorker = new GameWorker(state);
-        gameWorker.execute();
-    }
-
-    private void setupActions() {
-        choices.forEach(btn -> btn.addActionListener(e -> state.actAnswer(btn.getText())));
-        partnerIcons.forEach(p -> p.addActionListener(e -> {
-            final var idx = partnerIcons.indexOf(p);
-            p.setEnabled(false);
-            new LifelineFeature(partners.get(idx)).run();
-        }));
-    }
-
-    private List<Word> getRandomWord() {
-        final var words = Dictionary.getInstance().getWords().values().stream().toList();
-        final var indicies = new HashSet<Word>();
-        while (indicies.size() < 4)
-            indicies.add(words.get(ThreadLocalRandom.current().nextInt(words.size())));
-        return new ArrayList<>(indicies);
+    public static GameFrame getInstance() {
+        return instance == null ? instance = new GameFrame() : instance;
     }
 
     /**
-     * Requests a random quiz be put up the frame.
+     * Retrieves the game state.
+     *
+     * @return The state.
      */
-    public void randomQuiz() {
-        final var questions = getRandomWord();
+    public GameState getState() {
+        return state;
+    }
 
-        if (ThreadLocalRandom.current().nextBoolean()) {
-            // Ask word, answer definitions.
-            quizArea.setText(questions.get(0).word);
-            state.setCorrectAnswer(questions.get(0).definition);
-            Collections.shuffle(questions);
-            IntStream.range(0, 4).forEach(i -> choices.get(i).setText(questions.get(i).definition));
-        } else {
-            // Ask definition, answer words.
-            quizArea.setText(questions.get(0).definition);
-            state.setCorrectAnswer(questions.get(0).word);
-            Collections.shuffle(questions);
-            IntStream.range(0, 4).forEach(i -> choices.get(i).setText(questions.get(i).word));
-        }
+    /**
+     * Stops the game.
+     */
+    public void stop() {
+        gameWorker.cancel(true);
     }
 
     /**
@@ -231,11 +192,20 @@ public final class GameFrame implements Overrideable {
      */
     public void setPartners(List<QuizLifelinePanel.Partner> partners) {
         this.partners.clear();
-        for(int i = 0; i < partners.size(); i++) {
+        for (int i = 0; i < partners.size(); i++) {
             final var p = partners.get(i);
             this.partners.add(p);
-            this.partnerIcons.get(i).setIcon(Application.getIcon("/images/%s.png".formatted(p.name().toLowerCase()), 64, 64));
-            this.partnerNames.get(i).setText(partners.get(i).name().substring(0, 1).toUpperCase() + p.name().substring(1).toLowerCase());
+            this.partnerIcons.get(i)
+                .setIcon(Application.getIcon(
+                    "/images/%s.png".formatted(p.name().toLowerCase()), 64,
+                    64));
+            this.partnerNames.get(i)
+                .setText(partners.get(i)
+                             .name()
+                             .substring(0, 1)
+                             .toUpperCase() + p.name()
+                             .substring(1)
+                             .toLowerCase());
         }
 
         setup();
@@ -250,6 +220,66 @@ public final class GameFrame implements Overrideable {
         QuizEventsListener.reset();
         partnerIcons.forEach(c -> c.setEnabled(true));
         return outerPane;
+    }
+
+    /**
+     * Updates the current display of the game frame.
+     */
+    public void updateDisplay() {
+        final var format = new DecimalFormat("#,###");
+        scoreValue.setText(format.format(state.getScore()));
+        hpValue.setText(format.format(state.getHp()));
+        comboValue.setText("%d (%.2fx)".formatted(state.getCombo(),
+            state.getComboMultiplier()));
+        hpBar.setValue((int) (state.getHp() * 100 / state.getMaxHp()));
+        clockValue.setText("00:%02d".formatted(state.getSeconds()));
+    }
+
+    /**
+     * Requests a random quiz be put up the frame.
+     */
+    public void randomQuiz() {
+        final var questions = getRandomWord();
+
+        if (ThreadLocalRandom.current().nextBoolean()) {
+            // Ask word, answer definitions.
+            quizArea.setText(questions.get(0).word);
+            state.setCorrectAnswer(questions.get(0).definition);
+            Collections.shuffle(questions);
+            IntStream.range(0, 4)
+                .forEach(
+                    i -> choices.get(i).setText(questions.get(i).definition));
+        } else {
+            // Ask definition, answer words.
+            quizArea.setText(questions.get(0).definition);
+            state.setCorrectAnswer(questions.get(0).word);
+            Collections.shuffle(questions);
+            IntStream.range(0, 4)
+                .forEach(i -> choices.get(i).setText(questions.get(i).word));
+        }
+    }
+
+    private void setupWorker() {
+        if (gameWorker != null) {
+            gameWorker.cancel(true);
+        }
+
+        gameWorker = new GameWorker(state);
+        gameWorker.execute();
+    }
+
+    private List<Word> getRandomWord() {
+        final var words = Dictionary.getInstance()
+            .getWords()
+            .values()
+            .stream()
+            .toList();
+        final var indicies = new HashSet<Word>();
+        while (indicies.size() < 4) {
+            indicies.add(
+                words.get(ThreadLocalRandom.current().nextInt(words.size())));
+        }
+        return new ArrayList<>(indicies);
     }
 
 }

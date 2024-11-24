@@ -7,10 +7,9 @@ import dev.frilly.slangdict.interfaces.Cancellable;
  */
 public final class ComboChangeEvent extends Event implements Cancellable {
 
-    private boolean cancelled = false;
-
-    private final long oldCombo;
-    private long newCombo;
+    private final long    oldCombo;
+    private       boolean cancelled = false;
+    private       long    newCombo;
 
     public ComboChangeEvent(long oldCombo, long newCombo) {
         this.oldCombo = oldCombo;
@@ -30,13 +29,13 @@ public final class ComboChangeEvent extends Event implements Cancellable {
     }
 
     @Override
-    public void setCancelled(boolean cancelled) {
-        this.cancelled = cancelled;
+    public boolean isCancelled() {
+        return cancelled;
     }
 
     @Override
-    public boolean isCancelled() {
-        return cancelled;
+    public void setCancelled(boolean cancelled) {
+        this.cancelled = cancelled;
     }
 
 }

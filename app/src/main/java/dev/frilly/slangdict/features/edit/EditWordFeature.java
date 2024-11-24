@@ -13,9 +13,10 @@ public final class EditWordFeature implements Runnable {
     private final String newWord;
     private final String newDefinition;
 
-    public EditWordFeature(final String word, final String newWord, final String newDefinition) {
-        this.word = word;
-        this.newWord = newWord;
+    public EditWordFeature(
+        final String word, final String newWord, final String newDefinition) {
+        this.word          = word;
+        this.newWord       = newWord;
         this.newDefinition = newDefinition;
     }
 
@@ -23,14 +24,16 @@ public final class EditWordFeature implements Runnable {
     public void run() {
         final var n = Dictionary.getInstance().getWord(newWord);
         if (n != null && !newWord.equals(word)) {
-            Dialogs.error("That word \"%s\" already exists. Choose another to edit to.", newWord);
+            Dialogs.error(
+                "That word \"%s\" already exists. Choose another to edit to.",
+                newWord);
             return;
         }
 
         final var w = Dictionary.getInstance().getWord(word);
         Dictionary.getInstance().deleteWord(word);
 
-        w.word = newWord;
+        w.word       = newWord;
         w.definition = newDefinition;
         Dictionary.getInstance().addWord(w);
         Dialogs.info("Edited word \"%s\".", word);

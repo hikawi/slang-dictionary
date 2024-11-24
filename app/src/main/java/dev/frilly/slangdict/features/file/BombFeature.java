@@ -7,16 +7,18 @@ import javax.swing.*;
 
 /**
  * Implementation for the "Bomb Database" feature.
- * 
+ * <p>
  * This nukes every entry and clears everything.
  */
 public final class BombFeature implements Runnable {
 
     @Override
     public void run() {
-        final var opt = Dialogs.confirm("This will remove ALL entries of this database. Are you sure?");
-        if(opt == JOptionPane.NO_OPTION)
+        final var opt = Dialogs.confirm(
+            "This will remove ALL entries of this database. Are you sure?");
+        if (opt == JOptionPane.NO_OPTION) {
             return;
+        }
 
         Dictionary.getInstance().bomb();
     }

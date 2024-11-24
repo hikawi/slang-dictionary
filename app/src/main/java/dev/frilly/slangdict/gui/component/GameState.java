@@ -1,5 +1,6 @@
 package dev.frilly.slangdict.gui.component;
 
+import com.google.common.util.concurrent.AtomicDouble;
 import dev.frilly.slangdict.events.ComboChangeEvent;
 import dev.frilly.slangdict.events.DamageEvent;
 import dev.frilly.slangdict.events.EventManager;
@@ -7,31 +8,32 @@ import dev.frilly.slangdict.events.ScoreGainEvent;
 import dev.frilly.slangdict.gui.GameFrame;
 
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Represents the quiz's game state.
  */
 public final class GameState {
 
-    private final int maxHp = 5000;
-    private String correctAnswer;
+    private final static int          maxHp           = 5000;
+    private final        AtomicDouble score           = new AtomicDouble();
+    private final        AtomicLong   seconds         = new AtomicLong();
+    private final        AtomicLong   combo           = new AtomicLong();
+    private final        AtomicDouble hp              = new AtomicDouble();
+    private final        AtomicDouble comboMultiplier = new AtomicDouble();
 
-    private volatile double score = 0;
-    private volatile long seconds = 20;
-    private volatile long combo = 0;
-    private volatile double hp = 0.0;
-    private volatile double comboMultiplier = 1.0;
+    private String correctAnswer;
 
     /**
      * Resets the game state.
      */
     public void reset() {
         correctAnswer = "";
-        score = 0;
-        seconds = 20;
-        combo = 0;
-        hp = maxHp;
-        comboMultiplier = 1.0;
+        score.set(0);
+        seconds.set(20);
+        combo.set(0);
+        hp.set(maxHp);
+        comboMultiplier.set(1D);
     }
 
     /**
@@ -44,22 +46,12 @@ public final class GameState {
     }
 
     /**
-     * Checks if the provided answer is correct.
-     *
-     * @param answer The answer
-     * @return True if it matched correct answer.
-     */
-    public boolean checkAnswer(String answer) {
-        return answer.equalsIgnoreCase(this.correctAnswer);
-    }
-
-    /**
      * Gets the current combo.
      *
      * @return The combo value.
      */
     public long getCombo() {
-        return combo;
+        return combo.get();
     }
 
     /**
@@ -68,7 +60,7 @@ public final class GameState {
      * @return The combo multiplier.
      */
     public double getComboMultiplier() {
-        return comboMultiplier;
+        return comboMultiplier.get();
     }
 
     /**
@@ -77,7 +69,7 @@ public final class GameState {
      * @param comboMultiplier
      */
     public void setComboMultiplier(double comboMultiplier) {
-        this.comboMultiplier = comboMultiplier;
+        this.comboMultiplier.set(comboMultiplier);
     }
 
     /**
@@ -86,7 +78,7 @@ public final class GameState {
      * @return The score.
      */
     public double getScore() {
-        return score;
+        return score.get();
     }
 
     /**
@@ -95,7 +87,7 @@ public final class GameState {
      * @param score the score to set to
      */
     public void setScore(final double score) {
-        this.score = score;
+        this.score.set(score);
     }
 
     /**
@@ -104,7 +96,7 @@ public final class GameState {
      * @return the current HP.
      */
     public double getHp() {
-        return hp;
+        return hp.get();
     }
 
     /**
@@ -113,7 +105,7 @@ public final class GameState {
      * @param hp the hp.
      */
     public void setHp(double hp) {
-        this.hp = Math.min(hp, maxHp);
+        this.hp.set(Math.min(hp, maxHp));
     }
 
     /**
@@ -131,7 +123,7 @@ public final class GameState {
      * @return Time left
      */
     public long getSeconds() {
-        return seconds;
+        return seconds.get();
     }
 
     /**
@@ -140,57 +132,83 @@ public final class GameState {
      * @param seconds The seconds left
      */
     public void setSeconds(long seconds) {
-        this.seconds = seconds;
+        this.seconds.set(seconds);
+    }
+
+    /**
+     * Enacts on an answer.
+     *
+     * @param answer The answer
+     */
+    public void actAnswer(final String answer) {
+        if (checkAnswer(answer)) {
+            actCorrectAnswer();
+        } else {
+            actIncorrectAnswer();
+        }
+        GameFrame.getInstance().updateDisplay();
+        GameFrame.getInstance().randomQuiz();
+        seconds.set(20);
+    }
+
+    /**
+     * Checks if the provided answer is correct.
+     *
+     * @param answer The answer
+     *
+     * @return True if it matched correct answer.
+     */
+    public boolean checkAnswer(String answer) {
+        return answer.equalsIgnoreCase(this.correctAnswer);
     }
 
     /**
      * Enacts an action when the answer is correct.
      */
     public void actCorrectAnswer() {
-        final var comboEvent = new ComboChangeEvent(combo, combo + 1);
+        final var comboEvent = new ComboChangeEvent(combo.get(),
+                                                    combo.get() + 1);
         EventManager.dispatchEvent(comboEvent);
-        if(!comboEvent.isCancelled()) {
-            combo = comboEvent.getNewCombo();
-            comboMultiplier = Math.max(1.0 + ((Math.pow(combo, 2) - Math.pow(combo - 1, 2)) / 100.0), 1.0);
+        if (!comboEvent.isCancelled()) {
+            combo.set(comboEvent.getNewCombo());
+            comboMultiplier.set(Math.max(
+                1.0 + ((Math.pow(combo.get(), 2) - Math.pow(combo.get() - 1,
+                                                            2)) / 100.0), 1.0));
         }
 
-        final var event = new ScoreGainEvent(score, 100 * comboMultiplier);
+        final var event = new ScoreGainEvent(score.get(),
+                                             100 * comboMultiplier.get());
         EventManager.dispatchEvent(event);
-        if (!event.isCancelled())
-            score += event.getGain();
+        if (!event.isCancelled()) {
+            score.getAndAdd(event.getGain());
+        }
     }
 
     /**
      * Enacts an action when the answer is incorrect.
      */
     public void actIncorrectAnswer() {
-        final var comboEvent = new ComboChangeEvent(combo, 0);
+        final var comboEvent = new ComboChangeEvent(combo.get(), 0);
         EventManager.dispatchEvent(comboEvent);
-        if(!comboEvent.isCancelled()) {
-            combo = comboEvent.getNewCombo();
-            comboMultiplier = 1.0;
+        if (!comboEvent.isCancelled()) {
+            combo.set(comboEvent.getNewCombo());
+            comboMultiplier.set(1.0);
         }
 
-        final var scoreEvent = new ScoreGainEvent(score, -100);
+        final var scoreEvent = new ScoreGainEvent(score.get(), -100);
         EventManager.dispatchEvent(scoreEvent);
-        if (!scoreEvent.isCancelled())
-            score += scoreEvent.getGain();
+        if (!scoreEvent.isCancelled()) {
+            score.addAndGet(scoreEvent.getGain());
+        }
 
-        final var damageEvent = new DamageEvent(hp, ThreadLocalRandom.current().nextDouble(maxHp / 10), DamageEvent.DamageReason.INCORRECT);
+        final var damageEvent = new DamageEvent(hp.get(),
+                                                ThreadLocalRandom.current()
+                                                    .nextDouble(maxHp / 10),
+                                                DamageEvent.DamageReason.INCORRECT);
         EventManager.dispatchEvent(damageEvent);
-        if (!damageEvent.isCancelled())
-            hp -= damageEvent.getDamage();
-    }
-
-    /**
-     * Enacts on an answer.
-     * @param answer The answer
-     */
-    public void actAnswer(final String answer) {
-        if(checkAnswer(answer)) actCorrectAnswer(); else actIncorrectAnswer();
-        GameFrame.getInstance().updateDisplay();
-        GameFrame.getInstance().randomQuiz();
-        seconds = 20;
+        if (!damageEvent.isCancelled()) {
+            hp.addAndGet(-damageEvent.getDamage());
+        }
     }
 
 }

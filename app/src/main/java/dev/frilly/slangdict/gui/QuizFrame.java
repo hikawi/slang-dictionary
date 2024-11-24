@@ -1,5 +1,7 @@
 package dev.frilly.slangdict.gui;
 
+import dev.frilly.slangdict.Dialogs;
+import dev.frilly.slangdict.features.quiz.LifelineFeature;
 import dev.frilly.slangdict.gui.component.QuizLifelinePanel;
 import dev.frilly.slangdict.interfaces.Overrideable;
 
@@ -16,25 +18,28 @@ public final class QuizFrame implements Overrideable {
     private final JPanel panel = new JPanel();
 
     // Title section
-    private final JLabel titleText = new JLabel("Dictionary Quiz");
-    private final JTextArea descriptionText = new JTextArea("You will be given random words and definitions as questions, and you must choose the correct corresponding answer.", 3, 40);
-    private final JTextArea cautionText = new JTextArea("You will start with a specified amount of HP. The timer ticking will drain your HP, and incorrect choices critically damage you. Correct answers grant \"Points\", affected by the combo you can get.", 3, 40);
+    private final JLabel    titleText       = new JLabel("Dictionary Quiz");
+    private final JTextArea descriptionText = new JTextArea(
+        "You will be given random words and definitions as questions, and " + "you" + " must choose the correct corresponding answer.",
+        3, 40);
+    private final JTextArea cautionText     = new JTextArea(
+        "You will start with a specified amount of HP. The timer ticking " +
+        "will" + " drain your HP, and incorrect choices critically damage " +
+        "you" + ". Correct" + " answers grant \"Points\", affected by the " +
+        "combo you " + "can get.",
+        3, 40);
 
     // Lifeline sections
     private final QuizLifelinePanel lifelinePanel = new QuizLifelinePanel();
 
     // Start quiz button
     private final JButton nevermindButton = new JButton("Nevermind");
-    private final JButton startButton = new JButton("Start");
+    private final JButton startButton     = new JButton("Start");
 
     private QuizFrame() {
         setupStyles();
         setup();
         setupActions();
-    }
-
-    public static QuizFrame getInstance() {
-        return instance == null ? instance = new QuizFrame() : instance;
     }
 
     private void setupStyles() {
@@ -82,9 +87,19 @@ public final class QuizFrame implements Overrideable {
     private void setupActions() {
         nevermindButton.addActionListener(e -> MainFrame.getInstance().back());
         startButton.addActionListener(e -> {
+            if (lifelinePanel.getQueue()
+                    .size() < LifelineFeature.PARTNERS_COUNT) {
+                Dialogs.error("You must choose 4 partners.");
+                return;
+            }
+
             GameFrame.getInstance().setPartners(lifelinePanel.getQueue());
             MainFrame.getInstance().replace(GameFrame.getInstance());
         });
+    }
+
+    public static QuizFrame getInstance() {
+        return instance == null ? instance = new QuizFrame() : instance;
     }
 
     @Override

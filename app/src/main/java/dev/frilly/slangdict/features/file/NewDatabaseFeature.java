@@ -6,6 +6,7 @@ import dev.frilly.slangdict.gui.ProgressFrame;
 import dev.frilly.slangdict.gui.ViewFrame;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.UUID;
 
 /**
@@ -13,12 +14,12 @@ import java.util.UUID;
  */
 public final class NewDatabaseFeature implements Runnable {
 
-    public static int NO_BOOTSTRAP = 0;
-    public static int BOOTSTRAP_DEFAULT = 1;
-    public static int BOOTSTRAP_100K = 2;
+    public static final int NO_BOOTSTRAP      = 0;
+    public static final int BOOTSTRAP_DEFAULT = 1;
+    public static final int BOOTSTRAP_100K    = 2;
 
     private final String name;
-    private final int bootstrap;
+    private final int    bootstrap;
 
     /**
      * Creates an instance of the feature with the specified params.
@@ -28,17 +29,20 @@ public final class NewDatabaseFeature implements Runnable {
      *                  default, 2 = 100k random.
      */
     public NewDatabaseFeature(final String name, final int bootstrap) {
-        this.name = name;
+        this.name      = name;
         this.bootstrap = bootstrap;
     }
 
     @Override
     public void run() {
         final File dataFolder = new File("./.data/dbs");
-        if (!dataFolder.exists()) dataFolder.mkdirs();
+        if (!dataFolder.exists()) {
+            dataFolder.mkdirs();
+        }
 
         final var prog = ProgressFrame.getInstance();
-        prog.setValues("Creating database \"%s\"".formatted(name), "Initializing creation...");
+        prog.setValues("Creating database \"%s\"".formatted(name),
+                       "Initializing creation...");
 
         ProgressFrame.getInstance()
             .startTask(
@@ -47,13 +51,11 @@ public final class NewDatabaseFeature implements Runnable {
                         // Save before opening.
                         prog.setMessage("Saving the current dictionary...");
                         prog.setProgress(10);
-                        Thread.sleep(1000);
                         Dictionary.getInstance().save();
 
                         // Create new files.
                         prog.setMessage("Creating files...");
                         prog.setProgress(20);
-                        Thread.sleep(1000);
                         final var uuid = UUID.randomUUID();
                         final var file = new File(dataFolder, uuid + ".dict");
                         file.createNewFile();
@@ -61,7 +63,6 @@ public final class NewDatabaseFeature implements Runnable {
                         // Binding files.
                         prog.setMessage("Binding files...");
                         prog.setProgress(30);
-                        Thread.sleep(1000);
                         Dictionary.getInstance().setFile(file);
                         Dictionary.getInstance().rename(name);
 
@@ -69,16 +70,15 @@ public final class NewDatabaseFeature implements Runnable {
                         if (bootstrap != NO_BOOTSTRAP) {
                             prog.setMessage("Bootstrapping dictionary...");
                             prog.setProgress(50);
-                            Thread.sleep(1000);
-                            Dictionary.getInstance().loadDefaults(bootstrap == BOOTSTRAP_100K);
+                            Dictionary.getInstance()
+                                .loadDefaults(bootstrap == BOOTSTRAP_100K);
                         }
 
                         // Trigger saving the dictionary.
                         prog.setMessage("Finalizing...");
                         prog.setProgress(99);
-                        Thread.sleep(1000);
                         Dictionary.getInstance().save();
-                    } catch (Exception e) {
+                    } catch (final IOException e) {
                         e.printStackTrace();
                     }
                 },
@@ -89,4 +89,5 @@ public final class NewDatabaseFeature implements Runnable {
                 null
             );
     }
+
 }

@@ -7,22 +7,15 @@ import dev.frilly.slangdict.interfaces.Cancellable;
  */
 public final class DamageEvent extends Event implements Cancellable {
 
-    public enum DamageReason {
-
-        CLOCK,
-        INCORRECT,
-        SELF;
-
-    }
-
-    private final double currentHp;
-    private double damage;
-    private boolean cancelled;
+    private final double       currentHp;
     private final DamageReason damageReason;
+    private       double       damage;
+    private       boolean      cancelled;
 
-    public DamageEvent(double currentHp, double damage, DamageReason damageReason) {
-        this.currentHp = currentHp;
-        this.damage = damage;
+    public DamageEvent(
+        double currentHp, double damage, DamageReason damageReason) {
+        this.currentHp    = currentHp;
+        this.damage       = damage;
         this.damageReason = damageReason;
     }
 
@@ -42,14 +35,22 @@ public final class DamageEvent extends Event implements Cancellable {
         this.damage = damage;
     }
 
-    @Override
-    public void setCancelled(boolean cancelled) {
-        this.cancelled = cancelled;
+    public enum DamageReason {
+
+        CLOCK,
+        INCORRECT,
+        SELF;
+
     }
 
     @Override
     public boolean isCancelled() {
         return cancelled;
+    }
+
+    @Override
+    public void setCancelled(boolean cancelled) {
+        this.cancelled = cancelled;
     }
 
 }

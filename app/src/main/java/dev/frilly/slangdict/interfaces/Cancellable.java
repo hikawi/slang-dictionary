@@ -5,7 +5,8 @@ package dev.frilly.slangdict.interfaces;
  */
 public interface Cancellable {
 
-    void setCancelled(boolean cancelled);
     boolean isCancelled();
+
+    void setCancelled(boolean cancelled);
 
 }

@@ -5,19 +5,9 @@ package dev.frilly.slangdict;
  */
 public class Word {
 
-    public String word = "null";
-    public String definition = "null";
-    public boolean locked = false;
-    public boolean favorite = false;
-
-    @Override
-    public String toString() {
-        return "Word{" +
-            "word='" + word + '\'' +
-            ", definition='" + definition + '\'' +
-            ", locked=" + locked +
-            ", favorite=" + favorite +
-            '}';
-    }
+    public String  word       = "null";
+    public String  definition = "null";
+    public boolean locked;
+    public boolean favorite;
 
 }

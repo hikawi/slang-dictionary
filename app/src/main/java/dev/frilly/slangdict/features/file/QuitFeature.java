@@ -1,8 +1,8 @@
 package dev.frilly.slangdict.features.file;
 
-import java.awt.event.WindowEvent;
-
 import dev.frilly.slangdict.gui.MainFrame;
+
+import java.awt.event.WindowEvent;
 
 /**
  * Implementation for the quit program feature.

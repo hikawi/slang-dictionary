@@ -1,9 +1,8 @@
 package dev.frilly.slangdict.gui;
 
-import dev.frilly.slangdict.Application;
 import dev.frilly.slangdict.Dictionary;
+import dev.frilly.slangdict.Utilities;
 import dev.frilly.slangdict.Word;
-import dev.frilly.slangdict.features.edit.AddWordFeature;
 import dev.frilly.slangdict.features.edit.EditWordFeature;
 import dev.frilly.slangdict.interfaces.Overrideable;
 
@@ -14,16 +13,16 @@ import java.awt.*;
 public class EditingFrame implements Overrideable {
 
     private static EditingFrame instance;
-    private final JPanel panel = new JPanel();
+    private final  JPanel       panel = new JPanel();
 
-    private final JLabel addingToLabel = new JLabel();
-    private final JLabel wordLabel = new JLabel("Word");
-    private final JTextField wordField = new JTextField();
-    private final JLabel definitionLabel = new JLabel("Definition");
-    private final JTextArea definitionTextArea = new JTextArea();
+    private final JLabel     addingToLabel      = new JLabel();
+    private final JLabel     wordLabel          = new JLabel("Word");
+    private final JTextField wordField          = new JTextField();
+    private final JLabel     definitionLabel    = new JLabel("Definition");
+    private final JTextArea  definitionTextArea = new JTextArea();
 
     private final JButton confirmButton = new JButton("Confirm");
-    private final JButton cancelButton = new JButton("Cancel");
+    private final JButton cancelButton  = new JButton("Cancel");
 
     private Word word = null;
 
@@ -32,16 +31,8 @@ public class EditingFrame implements Overrideable {
         setupActions();
     }
 
-    public static EditingFrame getInstance() {
-        return instance == null ? instance = new EditingFrame() : instance;
-    }
-
     private void setup() {
-        final var l = new GroupLayout(panel);
-        l.setAutoCreateContainerGaps(true);
-        l.setAutoCreateGaps(true);
-
-        panel.setLayout(l);
+        final var l = Utilities.group(panel);
         panel.setBorder(BorderFactory.createEmptyBorder(24, 16, 24, 16));
         addingToLabel.putClientProperty("FlatLaf.styleClass", "h3");
         wordLabel.putClientProperty("FlatLaf.styleClass", "semibold");
@@ -67,18 +58,31 @@ public class EditingFrame implements Overrideable {
                 .addComponent(cancelButton)
                 .addComponent(confirmButton)));
 
-        l.setHorizontalGroup(l.createParallelGroup(GroupLayout.Alignment.LEADING)
-            .addComponent(addingToLabel)
-            .addComponent(wordLabel)
-            .addComponent(wordField)
-            .addComponent(definitionLabel)
-            .addComponent(definitionTextArea)
-            .addGroup(GroupLayout.Alignment.TRAILING, l.createSequentialGroup()
-                .addComponent(cancelButton)
-                .addComponent(confirmButton)));
+        l.setHorizontalGroup(
+            l.createParallelGroup(GroupLayout.Alignment.LEADING)
+                .addComponent(addingToLabel)
+                .addComponent(wordLabel)
+                .addComponent(wordField)
+                .addComponent(definitionLabel)
+                .addComponent(definitionTextArea)
+                .addGroup(GroupLayout.Alignment.TRAILING,
+                    l.createSequentialGroup()
+                        .addComponent(cancelButton)
+                        .addComponent(confirmButton)));
 
         l.linkSize(SwingConstants.HORIZONTAL, wordField, definitionTextArea);
         l.linkSize(SwingConstants.HORIZONTAL, confirmButton, cancelButton);
+    }
+
+    private void setupActions() {
+        cancelButton.addActionListener(e -> MainFrame.getInstance().back());
+        confirmButton.addActionListener(
+            e -> new EditWordFeature(word.word, wordField.getText(),
+                definitionTextArea.getText()).run());
+    }
+
+    public static EditingFrame getInstance() {
+        return instance == null ? instance = new EditingFrame() : instance;
     }
 
     /**
@@ -90,15 +94,11 @@ public class EditingFrame implements Overrideable {
         this.word = word;
     }
 
-    private void setupActions() {
-        cancelButton.addActionListener(e -> MainFrame.getInstance().back());
-        confirmButton.addActionListener(e -> new EditWordFeature(word.word, wordField.getText(), definitionTextArea.getText()).run());
-    }
-
     @Override
     public JPanel getOverridingPane() {
-        addingToLabel.setText("Editing word in \"%s\"...".formatted(Dictionary.getInstance().getName()));
-        if(word != null) {
+        addingToLabel.setText("Editing word in \"%s\"...".formatted(
+            Dictionary.getInstance().getName()));
+        if (word != null) {
             wordField.setText(word.word);
             definitionTextArea.setText(word.definition);
         } else {

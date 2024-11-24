@@ -1,5 +1,6 @@
 package dev.frilly.slangdict.gui;
 
+import dev.frilly.slangdict.Utilities;
 import dev.frilly.slangdict.features.edit.DeleteWordFeature;
 import dev.frilly.slangdict.interfaces.Overrideable;
 
@@ -15,14 +16,15 @@ public final class DeletingFrame implements Overrideable {
 
     private static DeletingFrame instance;
 
-    private final JPanel panel = new JPanel();
-    private final JLabel confirmText = new JLabel("Are you sure you want to delete these words?");
+    private final JPanel panel       = new JPanel();
+    private final JLabel confirmText = new JLabel(
+        "Are you sure you want to delete these words?");
 
     // UI Components
-    private final JList<String> list = new JList<>();
-    private final JScrollPane scrollPane = new JScrollPane(list);
-    private final JButton confirmButton = new JButton("Confirm");
-    private final JButton cancelButton = new JButton("Cancel");
+    private final JList<String> list          = new JList<>();
+    private final JScrollPane   scrollPane    = new JScrollPane(list);
+    private final JButton       confirmButton = new JButton("Confirm");
+    private final JButton       cancelButton  = new JButton("Cancel");
 
     private List<String> selectedWords;
 
@@ -31,15 +33,8 @@ public final class DeletingFrame implements Overrideable {
         setupActions();
     }
 
-    public static DeletingFrame getInstance() {
-        return instance == null ? instance = new DeletingFrame() : instance;
-    }
-
     private void setup() {
-        final var l = new GroupLayout(panel);
-        panel.setLayout(l);
-        l.setAutoCreateGaps(true);
-        l.setAutoCreateContainerGaps(true);
+        final var l = Utilities.group(panel);
 
         panel.setBorder(BorderFactory.createEmptyBorder(24, 24, 24, 24));
         scrollPane.setPreferredSize(new Dimension(200, 200));
@@ -49,17 +44,26 @@ public final class DeletingFrame implements Overrideable {
             .addComponent(confirmText)
             .addComponent(scrollPane)
             .addGap(16, 20, 24)
-            .addGroup(Alignment.TRAILING, l.createSequentialGroup().addComponent(cancelButton).addComponent(confirmButton)));
+            .addGroup(Alignment.TRAILING, l.createSequentialGroup()
+                .addComponent(cancelButton)
+                .addComponent(confirmButton)));
         l.setVerticalGroup(l.createSequentialGroup()
             .addComponent(confirmText)
             .addGap(8)
             .addComponent(scrollPane)
-            .addGroup(l.createParallelGroup(Alignment.BASELINE).addComponent(cancelButton).addComponent(confirmButton)));
+            .addGroup(l.createParallelGroup(Alignment.BASELINE)
+                .addComponent(cancelButton)
+                .addComponent(confirmButton)));
     }
 
     private void setupActions() {
         cancelButton.addActionListener(e -> MainFrame.getInstance().back());
-        confirmButton.addActionListener(e -> new DeleteWordFeature(selectedWords).run());
+        confirmButton.addActionListener(
+            e -> new DeleteWordFeature(selectedWords).run());
+    }
+
+    public static DeletingFrame getInstance() {
+        return instance == null ? instance = new DeletingFrame() : instance;
     }
 
     /**

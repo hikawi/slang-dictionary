@@ -15,16 +15,15 @@ public final class ResettingFrame implements Overrideable {
 
     private final JPanel panel = new JPanel();
 
-    private final JLabel chooseLabel = new JLabel("Pick a dictionary to re-populate this database with?");
-    private final JRadioButton dict100k = new JRadioButton("Use 100k testing entries");
-    private final JRadioButton dictDefault = new JRadioButton("Use default entries", true);
+    private final JLabel       chooseLabel = new JLabel(
+        "Pick a dictionary to re-populate this database with?");
+    private final JRadioButton dict100k    = new JRadioButton(
+        "Use 100k testing entries");
+    private final JRadioButton dictDefault = new JRadioButton(
+        "Use default entries", true);
 
     private final JButton confirm = new JButton("Confirm");
-    private final JButton cancel = new JButton("Cancel");
-
-    public static ResettingFrame getInstance() {
-        return instance == null ? instance = new ResettingFrame() : instance;
-    }
+    private final JButton cancel  = new JButton("Cancel");
 
     private ResettingFrame() {
         setup();
@@ -43,13 +42,15 @@ public final class ResettingFrame implements Overrideable {
         l.setAutoCreateGaps(true);
         l.setAutoCreateContainerGaps(true);
 
-        l.setHorizontalGroup(l.createParallelGroup(GroupLayout.Alignment.LEADING)
-            .addComponent(chooseLabel)
-            .addComponent(dict100k)
-            .addComponent(dictDefault)
-            .addGroup(GroupLayout.Alignment.TRAILING, l.createSequentialGroup()
-                .addComponent(cancel)
-                .addComponent(confirm)));
+        l.setHorizontalGroup(
+            l.createParallelGroup(GroupLayout.Alignment.LEADING)
+                .addComponent(chooseLabel)
+                .addComponent(dict100k)
+                .addComponent(dictDefault)
+                .addGroup(GroupLayout.Alignment.TRAILING,
+                    l.createSequentialGroup()
+                        .addComponent(cancel)
+                        .addComponent(confirm)));
 
         l.setVerticalGroup(l.createSequentialGroup()
             .addComponent(chooseLabel)
@@ -68,12 +69,17 @@ public final class ResettingFrame implements Overrideable {
     private void setupActions() {
         cancel.addActionListener(e -> MainFrame.getInstance().back());
         confirm.addActionListener(e -> {
-            final var opt = Dialogs.confirm("Are you sure you want to reset all entries to default?");
-            if(opt == JOptionPane.YES_OPTION) {
+            final var opt = Dialogs.confirm(
+                "Are you sure you want to reset all entries to default?");
+            if (opt == JOptionPane.YES_OPTION) {
                 Dictionary.getInstance().loadDefaults(dict100k.isSelected());
                 MainFrame.getInstance().back();
             }
         });
+    }
+
+    public static ResettingFrame getInstance() {
+        return instance == null ? instance = new ResettingFrame() : instance;
     }
 
     @Override

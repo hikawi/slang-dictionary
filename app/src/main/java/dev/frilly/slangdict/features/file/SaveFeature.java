@@ -4,7 +4,7 @@ import dev.frilly.slangdict.Dictionary;
 
 /**
  * Implementation for the file saving feature.
- * 
+ * <p>
  * If the dictionary isn't set, this just does nothing.
  */
 public final class SaveFeature implements Runnable {

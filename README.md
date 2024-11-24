@@ -2,9 +2,10 @@
 
 # Slang Dictionary
 
-### A Java 21 Swing application to look up a local slang dictionary.
+### A Java 21 Swing application to look up a local slang dictionary
 
 ![Static Badge](https://img.shields.io/badge/java-21-orange?logo=java)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/da80c89fedf946899ca104426c6f5f31)](https://app.codacy.com/gh/hikawi/slang-dictionary/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 
 </div>
 
@@ -51,7 +52,7 @@ This project focuses more on IO, OOP, Generics and Collections.
 - [x] Delete a word, with confirmation.
 - [x] Reset back to default list.
 - [x] Randomly select a word and display it as the "Word of the Day".
-- [ ] Quiz Feature
+- [x] Quiz Feature
 
 ### All Features
 
@@ -97,3 +98,33 @@ This application provides multiple ways to customize your searches.
 | `search.match`   | Match Searches      | Ability to pick whether the search should match against words or definitions, or casings or uses the search text as a regex.          |
 | `search.random`  | Random Word         | See the word of the day, and ability to request a new word. Ability to see a certain message if there is nothing within the database. |
 | `search.history` | View Search History | You can see what words were queried, how many results returned, how much time elapsed and when that query happened.                   |
+
+### Quiz
+
+The quiz is formatted in a way, so that your goal would be to go for the highest score possible. Score is affected by your **Combo Stack**, which goes up by how many answers you get correct in a row. The higher your combo goes, the higher your multiplier scales. But be aware, one wrong answer will collapse your multiplier back to 1x.
+
+There are partners, acting as lifelines, you can choose up to 4, each having a unique one-time use ability that may help planning to max out your score gain:
+
+- Noah: Grants immunity to damage and combo break for 10s.
+- Mio: Converts 30% of damage taken into score.
+- Eunie: Heals 20% of your max HP.
+- Taion: Grants immunity to damage from incorrect answers for the next 3 incorrect answers.
+- Sena: The next score change is multiplied by 4.
+- Lanz: Reduces all damage taken, but also score gains.
+- Matthew: Increases combo multiplier by 1.5x.
+- A: Heals 5% of your max HP and grants immunity to damage for 10s. (She originally was going to grant immunity to damage, heal and slow down time for that period, but that seems too difficult to do)
+- Nikol: Reduces all damage taken greatly, but combo multiplier no longer stacks.
+- Glimmer: Heals 10% of your max HP, and grants a multiplier on the next 3 questions.
+- Rex: The next score change is multiplied by 10.
+- Shulk: Heal 10% of your HP once you take fatal damage.
+
+## Submission Criteria
+
+- [x] The submission is archived.
+- [x] Grade yourself, based on max score 100. Each *required* feature is worth 10. If the feature is slow, (over 1s), that feature gets -5. If the UI is unusable and difficult to see, then that feature takes a -3. Of course, unimplemented or errors is a 0. (He was dumb, there were 9 requireds, but he numbered them 1 to 8, and then 10)
+- [x] Use other collections, other than List.
+- [x] More than 10 commits
+- [x] Plagiarism is a full 0 on the course.
+- [x] Referencing is OK and needs notes.
+- [x] Publish a YouTube video demonstrating and all features.
+- [x] Archive file includes source, built jar, default data files, commit image and a .txt file for self-grading.

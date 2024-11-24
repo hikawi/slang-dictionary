@@ -8,10 +8,10 @@ import java.util.*;
  */
 public final class Dictionary {
 
-    private static Dictionary instance;
-    private final Map<String, Word> words = new HashMap<>();
-    private String name;
-    private File file;
+    private static Dictionary        instance;
+    private final  Map<String, Word> words = new HashMap<>();
+    private        String            name;
+    private        File              file;
 
     private Dictionary() {
     }
@@ -41,27 +41,22 @@ public final class Dictionary {
         return Collections.unmodifiableMap(words);
     }
 
-    public Word getWord(final String key) {
-        if (key == null) return null;
-        return this.words.get(key.toLowerCase());
+    /**
+     * Checks if a word exists with such a key.
+     *
+     * @param key The key
+     *
+     * @return True if exists.
+     */
+    public boolean exists(final String key) {
+        return getWord(key) != null;
     }
 
-    /**
-     * Edits the word to a new word.
-     *
-     * @param word    The word to match.
-     * @param newWord The new word.
-     * @return The word if it was changed, or null.
-     */
-    public Word editWord(final String word, final String newWord) {
-        final var wordObj = getWord(word);
-        if (wordObj == null)
+    public Word getWord(final String key) {
+        if (key == null) {
             return null;
-
-        wordObj.word = newWord;
-        words.remove(word.toLowerCase());
-        words.put(newWord.toLowerCase(), wordObj);
-        return wordObj;
+        }
+        return this.words.get(key.toLowerCase());
     }
 
     /**
@@ -90,15 +85,6 @@ public final class Dictionary {
     }
 
     /**
-     * Renames the current dictionary instance.
-     *
-     * @param name The name.
-     */
-    public void rename(final String name) {
-        this.name = name;
-    }
-
-    /**
      * Retrieves the file instance.
      *
      * @return The file.
@@ -114,7 +100,9 @@ public final class Dictionary {
      */
     public void setFile(final File file) {
         this.file = file;
-        if (file == null) words.clear();
+        if (file == null) {
+            words.clear();
+        }
     }
 
     /**
@@ -128,15 +116,16 @@ public final class Dictionary {
 
         try {
             final var tempDict = new HashMap<String, Word>();
-            final var input = new DataInputStream(new BufferedInputStream(new FileInputStream(file)));
+            final var input    = new DataInputStream(
+                new BufferedInputStream(new FileInputStream(file)));
             rename(input.readUTF());
 
             while (input.available() > 0) {
                 final var word = new Word();
-                word.word = input.readUTF();
+                word.word       = input.readUTF();
                 word.definition = input.readUTF();
-                word.favorite = input.readBoolean();
-                word.locked = input.readBoolean();
+                word.favorite   = input.readBoolean();
+                word.locked     = input.readBoolean();
                 tempDict.put(word.word.toLowerCase(), word);
             }
 
@@ -147,14 +136,24 @@ public final class Dictionary {
             words.putAll(tempDict);
         } catch (Exception e) {
             e.printStackTrace();
-            Dialogs.error("file.load.error", file.getName());
+            Dialogs.error("Error loading file %s.", file.getName());
         }
+    }
+
+    /**
+     * Renames the current dictionary instance.
+     *
+     * @param name The name.
+     */
+    public void rename(final String name) {
+        this.name = name;
     }
 
     /**
      * Loads the defaults dictionary.
      * <p>
-     * The defaults slang.txt in the .jar file has a different format from the normally saved dictionary.
+     * The defaults slang.txt in the .jar file has a different format from
+     * the normally saved dictionary.
      */
     public void loadDefaults() {
         loadDefaults(false);
@@ -172,15 +171,16 @@ public final class Dictionary {
         words.clear();
 
         try {
-            final var res = Objects.requireNonNull(getClass().getResourceAsStream(file));
-            final var input = new BufferedInputStream(res);
+            final var res     = Objects.requireNonNull(
+                getClass().getResourceAsStream(file));
+            final var input   = new BufferedInputStream(res);
             final var scanner = new Scanner(input);
 
             while (scanner.hasNext()) {
                 final var line = scanner.nextLine().split("`");
 
                 final var word = new Word();
-                word.word = line[0];
+                word.word       = line[0];
                 word.definition = line[1];
                 words.put(word.word.toLowerCase(), word);
             }
@@ -188,7 +188,7 @@ public final class Dictionary {
             scanner.close();
         } catch (Exception e) {
             e.printStackTrace();
-            Dialogs.error("file.load.error", file);
+            Dialogs.error("Error loading file %s.", file);
         }
     }
 
@@ -196,12 +196,17 @@ public final class Dictionary {
      * Saves the current dictionary.
      */
     public void save() {
-        if (file == null) return;
+        if (file == null) {
+            return;
+        }
 
         try {
-            if (!file.exists()) file.createNewFile();
+            if (!file.exists()) {
+                file.createNewFile();
+            }
 
-            final var output = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(file)));
+            final var output = new DataOutputStream(
+                new BufferedOutputStream(new FileOutputStream(file)));
             output.writeUTF(name);
 
             for (final var word : words.values()) {
@@ -215,7 +220,7 @@ public final class Dictionary {
             output.close();
         } catch (Exception e) {
             e.printStackTrace();
-            Dialogs.error("file.save.error", name, file.getName());
+            Dialogs.error("Error saving %s to %s.", name, file.getName());
         }
     }
 

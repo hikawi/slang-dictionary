@@ -8,9 +8,6 @@ import dev.frilly.slangdict.gui.ResettingFrame;
  */
 public final class ResetDatabaseFeature implements Runnable {
 
-    public ResetDatabaseFeature() {
-    }
-
     @Override
     public void run() {
         MainFrame.getInstance().override(ResettingFrame.getInstance());
