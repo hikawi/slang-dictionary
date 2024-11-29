@@ -9,6 +9,38 @@
 
 </div>
 
+## Screenshots
+
+<details>
+<summary>Welcome screen</summary>
+
+![Welcome screen](./screenshots/main.png)
+</details>
+
+<details>
+<summary>Creation screen</summary>
+
+![Create screen](./screenshots/new.png)
+</details>
+
+<details>
+<summary>View screen</summary>
+
+![View screen](./screenshots/view.png)
+</details>
+
+<details>
+<summary>Quiz Start screen</summary>
+
+![Quiz start screen](./screenshots/quiz-start.png)
+</details>
+
+<details>
+<summary>Quiz screen</summary>
+
+![Quiz screen](./screenshots/quiz.png)
+</details>
+
 ## Takeaways
 
 Main takeaways of this project are:
